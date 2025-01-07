@@ -24,14 +24,39 @@ type Game struct {
 func (g *Game) Play(randomNumber int) {
 	cli.Display(g.Writer, []string{
 		g.GameConfig["greeting"],
-		g.GameConfig["newline"],
-		g.GameConfig["difficulty"],
+		g.GameConfig["spacer"],
 	})
 
-	level, maxAttempts := g.getUserDifficultyInput()
-	gameState := g.initGameState(level, maxAttempts, randomNumber)
+gameLoop:
+	for {
+		cli.Display(g.Writer, g.GameConfig["difficulty"])
 
-	g.playTurns(gameState)
+		level, maxAttempts := g.getUserDifficultyInput()
+		gameState := g.initGameState(level, maxAttempts, randomNumber)
+		g.playTurns(gameState)
+
+		playGain := g.getPlayAgainInput()
+		if playGain {
+			continue gameLoop
+		} else {
+			cli.Display(g.Writer, []string{
+				g.GameConfig["bye"],
+				g.GameConfig["newline"],
+			})
+			break gameLoop
+		}
+	}
+}
+
+// initGameState initializes the game state with the selected difficulty level,
+// maximum attempts, and the random number to be guessed.
+func (g *Game) initGameState(level string, maxAttempts, randomNumber int) game.GameState {
+	return game.GameState{
+		Level:        level,
+		MaxAttempts:  maxAttempts,
+		RandomNumber: randomNumber,
+		Turns:        game.Turns{},
+	}
 }
 
 // playTurns manages the game loop, processing user guesses and displaying
@@ -57,14 +82,14 @@ turnLoop:
 				fmt.Sprintf(g.GameConfig["greater"], guessNumber),
 				g.GameConfig["spacer"],
 			})
-			continue
+			continue turnLoop
 
 		case -1:
 			cli.Display(g.Writer, []string{
 				fmt.Sprintf(g.GameConfig["less"], guessNumber),
 				g.GameConfig["spacer"],
 			})
-			continue
+			continue turnLoop
 
 		case 0:
 			cli.Display(g.Writer, []string{
@@ -82,15 +107,16 @@ func (g *Game) getUserDifficultyInput() (string, int) {
 	var level string
 	var maxAttempts int
 
+difficultyLoop:
 	for {
-		input, err := g.InputSource.NextDifficultyInput() // cli.GetUserInput(g.Reader)
+		input, err := g.InputSource.NextDifficultyInput()
 		if err != nil {
 			cli.Display(g.Writer, []string{
 				err.Error(),
 				g.GameConfig["spacer"],
 				g.GameConfig["difficulty"],
 			})
-			continue
+			continue difficultyLoop
 		}
 
 		level, maxAttempts, err = number.ParseDifficultyInput(input)
@@ -100,27 +126,16 @@ func (g *Game) getUserDifficultyInput() (string, int) {
 				g.GameConfig["spacer"],
 				g.GameConfig["difficulty"],
 			})
-			continue
+			continue difficultyLoop
 		}
-		break
+		break difficultyLoop
 	}
 	cli.Display(g.Writer, []string{
 		fmt.Sprintf(g.GameConfig["level"], level),
-		g.GameConfig["newline"],
+		g.GameConfig["spacer"],
 	})
 
 	return level, maxAttempts
-}
-
-// initGameState initializes the game state with the selected difficulty level,
-// maximum attempts, and the random number to be guessed.
-func (g *Game) initGameState(level string, maxAttempts, randomNumber int) game.GameState {
-	return game.GameState{
-		Level:        level,
-		MaxAttempts:  maxAttempts,
-		RandomNumber: randomNumber,
-		Turns:        game.Turns{},
-	}
 }
 
 // getUserGuessNumberInput prompts the user for a guess number and returns
@@ -128,15 +143,16 @@ func (g *Game) initGameState(level string, maxAttempts, randomNumber int) game.G
 func (g *Game) getUserGuessNumberInput() int {
 	var guessNumber int
 
+guessNumberLoop:
 	for {
 		cli.Display(g.Writer, g.GameConfig["guess"])
-		input, err := g.InputSource.NextGuessNumberInput() // cli.GetUserInput(g.Reader)
+		input, err := g.InputSource.NextGuessNumberInput()
 		if err != nil {
 			cli.Display(g.Writer, []string{
 				err.Error(),
 				g.GameConfig["spacer"],
 			})
-			continue
+			continue guessNumberLoop
 		}
 
 		guessNumber, err = number.ParseGuessNumberInput(input)
@@ -145,10 +161,42 @@ func (g *Game) getUserGuessNumberInput() int {
 				err.Error(),
 				g.GameConfig["spacer"],
 			})
-			continue
+			continue guessNumberLoop
 		}
-		break
+		break guessNumberLoop
 	}
 
 	return guessNumber
+}
+
+// getPlayAgainInput prompt the user for a play gain number and returns
+// the parsed boolean.
+func (g *Game) getPlayAgainInput() bool {
+	var playAgain bool
+
+playAgainLoop:
+	for {
+		cli.Display(g.Writer, g.GameConfig["again"])
+
+		input, err := g.InputSource.NextPlayAgainInput()
+		if err != nil {
+			cli.Display(g.Writer, []string{
+				err.Error(),
+				g.GameConfig["spacer"],
+			})
+			continue playAgainLoop
+		}
+
+		playAgain, err = number.ParsePlayAgainInput(input)
+		if err != nil {
+			cli.Display(g.Writer, []string{
+				err.Error(),
+				g.GameConfig["spacer"],
+			})
+			continue playAgainLoop
+		}
+		break playAgainLoop
+	}
+
+	return playAgain
 }

@@ -12,6 +12,7 @@ import (
 type InputSource interface {
 	NextDifficultyInput() (string, error)
 	NextGuessNumberInput() (string, error)
+	NextPlayAgainInput() (string, error)
 }
 
 // CliInput is a structure that implements the InputSource interface,
@@ -27,8 +28,14 @@ func (c *CliInput) NextDifficultyInput() (string, error) {
 }
 
 // NextGuessNumberInput retrieves the next guess number input from the user.
-// Similar to NextDifficultyInput, it uses GetUserInput to read from the Source.
+// It uses GetUserInput to read from the Source.
 func (c *CliInput) NextGuessNumberInput() (string, error) {
+	return GetUserInput(c.Source)
+}
+
+// NextPlayAgainInput retrieves the next play again input from the user.
+// Tt uses GetUserInput to read from the Source.
+func (c *CliInput) NextPlayAgainInput() (string, error) {
 	return GetUserInput(c.Source)
 }
 

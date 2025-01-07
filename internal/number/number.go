@@ -57,6 +57,22 @@ func ParseGuessNumberInput(s string) (int, error) {
 	return validateInputNumber(s, 1, 100)
 }
 
+// ParsePlayAgainInput parses the input string as a play again value and
+// validates that is is within the range of 1 to 2
+func ParsePlayAgainInput(s string) (bool, error) {
+	integer, err := validateInputNumber(s, 1, 2)
+	if err != nil {
+		return false, err
+	}
+
+	mapPlayAgain := map[int]bool{
+		1: true,
+		2: false,
+	}
+
+	return mapPlayAgain[integer], nil
+}
+
 // DifficultyToMaxAttempts is a mapping of difficulty levels to their
 // corresponding maximum attempts.
 type DifficultyToMaxAttempts map[string]int
