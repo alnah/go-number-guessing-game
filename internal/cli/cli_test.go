@@ -82,34 +82,48 @@ func TestUnitDisplayMessage(t *testing.T) {
 func TestUnitCliInput(t *testing.T) {
 	t.Run("input tests", func(t *testing.T) {
 		testCases := []struct {
-			description string
-			input       string
-			want        error
-			isGuess     bool
+			description      string
+			input            string
+			want             error
+			isDifficulty     bool
+			isGuessNumber    bool
+			isPlayAgain      bool
 		}{
 			{
-				description: "valid next difficulty input",
-				input:       "test",
+				description:  "valid next difficulty input",
+				input:       "1",
 				want:        nil,
-				isGuess:     false,
+				isDifficulty: true,
 			},
 			{
-				description: "empty nexy difficulty",
+				description:  "empty next difficulty input",
 				input:       "",
 				want:        c.NewEmptyError(c.EmptyMessage["empty_input"]),
-				isGuess:     false,
+				isDifficulty: true,
 			},
 			{
-				description: "valid next guess number input",
-				input:       "test",
+				description:  "valid next guess number input",
+				input:       "1",
 				want:        nil,
-				isGuess:     true,
+				isGuessNumber: true,
 			},
 			{
-				description: "empty next guess number input",
+				description:  "empty next guess number input",
 				input:       "",
 				want:        c.NewEmptyError(c.EmptyMessage["empty_input"]),
-				isGuess:     true,
+				isGuessNumber: true,
+			},
+			{
+				description:  "valid play again input",
+				input:       "1",
+				want:        nil,
+				isPlayAgain: true,
+			},
+			{
+				description:  "empty play again input",
+				input:       "",
+				want:        c.NewEmptyError(c.EmptyMessage["input"]),
+				isPlayAgain: true,
 			},
 		}
 
@@ -120,9 +134,12 @@ func TestUnitCliInput(t *testing.T) {
 				var got error
 				var input string
 
-				if tc.isGuess {
+				switch {
+				case tc.isPlayAgain:
+					input, got = cli.NextPlayAgainInput()
+				case tc.isGuessNumber:
 					input, got = cli.NextGuessNumberInput()
-				} else {
+				case tc.isDifficulty:
 					input, got = cli.NextDifficultyInput()
 				}
 

@@ -28,6 +28,8 @@ func TestIntegrationGameConfig(t *testing.T) {
 		"max_attempts": {},
 		"newline":      {},
 		"spacer":       {},
+		"again":        {},
+		"bye":          {},
 	}
 
 	var gotSet = make(map[string]struct{})
@@ -51,13 +53,14 @@ func TestIntegrationPlay(t *testing.T) {
 				mockInputSource: &MockInputSource{
 					DifficultyInput:   []string{"3"},
 					GuessNumberInputs: []string{"51", "49", "50"},
+					PlayAgainInput:    []string{"2"},
 				},
 				outputStrings: []string{
 					gameConfig["greeting"],
-					gameConfig["newline"],
+					gameConfig["spacer"],
 					gameConfig["difficulty"],
 					fmt.Sprintf(gameConfig["level"], "Hard"),
-					gameConfig["newline"],
+					gameConfig["spacer"],
 					gameConfig["guess"],
 					fmt.Sprintf(gameConfig["less"], 51),
 					gameConfig["spacer"],
@@ -67,6 +70,9 @@ func TestIntegrationPlay(t *testing.T) {
 					gameConfig["guess"],
 					fmt.Sprintf(gameConfig["equal"], 3),
 					gameConfig["newline"],
+					gameConfig["again"],
+					gameConfig["bye"],
+					gameConfig["newline"],
 				},
 			},
 			{
@@ -74,13 +80,14 @@ func TestIntegrationPlay(t *testing.T) {
 				mockInputSource: &MockInputSource{
 					DifficultyInput:   []string{"2"},
 					GuessNumberInputs: []string{"52", "51", "48", "49", "50"},
+					PlayAgainInput:    []string{"2"},
 				},
 				outputStrings: []string{
 					gameConfig["greeting"],
-					gameConfig["newline"],
+					gameConfig["spacer"],
 					gameConfig["difficulty"],
 					fmt.Sprintf(gameConfig["level"], "Medium"),
-					gameConfig["newline"],
+					gameConfig["spacer"],
 					gameConfig["guess"],
 					fmt.Sprintf(gameConfig["less"], 52),
 					gameConfig["spacer"],
@@ -96,6 +103,9 @@ func TestIntegrationPlay(t *testing.T) {
 					gameConfig["guess"],
 					fmt.Sprintf(gameConfig["equal"], 5),
 					gameConfig["newline"],
+					gameConfig["again"],
+					gameConfig["bye"],
+					gameConfig["newline"],
 				},
 			},
 			{
@@ -106,13 +116,14 @@ func TestIntegrationPlay(t *testing.T) {
 						"55", "54", "53", "52", "51",
 						"46", "47", "48", "49", "50",
 					},
+					PlayAgainInput: []string{"2"},
 				},
 				outputStrings: []string{
 					gameConfig["greeting"],
-					gameConfig["newline"],
+					gameConfig["spacer"],
 					gameConfig["difficulty"],
 					fmt.Sprintf(gameConfig["level"], "Easy"),
-					gameConfig["newline"],
+					gameConfig["spacer"],
 					gameConfig["guess"],
 					fmt.Sprintf(gameConfig["less"], 55),
 					gameConfig["spacer"],
@@ -143,6 +154,9 @@ func TestIntegrationPlay(t *testing.T) {
 					gameConfig["guess"],
 					fmt.Sprintf(gameConfig["equal"], 10),
 					gameConfig["newline"],
+					gameConfig["again"],
+					gameConfig["bye"],
+					gameConfig["newline"],
 				},
 			},
 		}
@@ -161,15 +175,100 @@ func TestIntegrationPlay(t *testing.T) {
 		}
 	})
 
+	t.Run("play again", func(t *testing.T) {
+		testCases := []struct {
+			description    string
+			playAgain      bool
+			playAgainInput []string
+		}{
+			{
+				description:    "play again",
+				playAgain:      true,
+				playAgainInput: []string{"1", "2"},
+			},
+			{
+				description:    "don't play again",
+				playAgain:      false,
+				playAgainInput: []string{"2"},
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.description, func(t *testing.T) {
+				mockInputSource := &MockInputSource{
+					DifficultyInput: []string{"3", "3"},
+					GuessNumberInputs: []string{
+						"51", "49", "50",
+						"51", "49", "50",
+					},
+					PlayAgainInput: tc.playAgainInput,
+				}
+
+				var wantWriter strings.Builder
+
+				for _, s := range []string{
+					gameConfig["greeting"],
+					gameConfig["spacer"],
+					gameConfig["difficulty"],
+					fmt.Sprintf(gameConfig["level"], "Hard"),
+					gameConfig["spacer"],
+					gameConfig["guess"],
+					fmt.Sprintf(gameConfig["less"], 51),
+					gameConfig["spacer"],
+					gameConfig["guess"],
+					fmt.Sprintf(gameConfig["greater"], 49),
+					gameConfig["spacer"],
+					gameConfig["guess"],
+					fmt.Sprintf(gameConfig["equal"], 3),
+					gameConfig["newline"],
+					gameConfig["again"],
+				} {
+					wantWriter.WriteString(s)
+				}
+
+				if tc.playAgain {
+					for _, s := range []string{
+						gameConfig["difficulty"],
+						fmt.Sprintf(gameConfig["level"], "Hard"),
+						gameConfig["spacer"],
+						gameConfig["guess"],
+						fmt.Sprintf(gameConfig["less"], 51),
+						gameConfig["spacer"],
+						gameConfig["guess"],
+						fmt.Sprintf(gameConfig["greater"], 49),
+						gameConfig["spacer"],
+						gameConfig["guess"],
+						fmt.Sprintf(gameConfig["equal"], 3),
+						gameConfig["newline"],
+						gameConfig["again"],
+					} {
+						wantWriter.WriteString(s)
+					}
+				}
+
+				wantWriter.WriteString(gameConfig["bye"])
+				wantWriter.WriteString(gameConfig["newline"])
+
+				gotWriter, game := initGame(mockInputSource)
+				game.Play(randomNumber)
+
+				assert.Equal(t, wantWriter.String(), gotWriter.String())
+			})
+		}
+	})
+
 	t.Run("no more attempts", func(t *testing.T) {
 		mockInputSource := &MockInputSource{
 			DifficultyInput:   []string{"3"},
 			GuessNumberInputs: []string{"53", "52", "51"},
+			PlayAgainInput:    []string{"2"},
 		}
 		gotWriter, game := initGame(mockInputSource)
 		game.Play(randomNumber)
 
 		assert.Contains(t, gotWriter.String(), gameConfig["max_attempts"])
+		assert.Contains(t, gotWriter.String(), gameConfig["bye"])
+		assert.Contains(t, gotWriter.String(), gameConfig["newline"])
 	})
 
 	t.Run("invalid difficulty inputs", func(t *testing.T) {
@@ -179,17 +278,17 @@ func TestIntegrationPlay(t *testing.T) {
 			wantErrorMessage string
 		}{
 			{
-				description:      "incorrect",
+				description:      "non-numeric input",
 				invalidInput:     "incorrect",
 				wantErrorMessage: number.ParseNumberMessage,
 			},
 			{
-				description:      "greater than 3",
+				description:      "greater than max difficulty",
 				invalidInput:     "4",
 				wantErrorMessage: fmt.Sprintf(number.NumberRangeMessage, 1, 3),
 			},
 			{
-				description:      "less than 1",
+				description:      "less than min difficulty",
 				invalidInput:     "0",
 				wantErrorMessage: fmt.Sprintf(number.NumberRangeMessage, 1, 3),
 			},
@@ -200,6 +299,7 @@ func TestIntegrationPlay(t *testing.T) {
 				mockInputSource := &MockInputSource{
 					DifficultyInput:   []string{tc.invalidInput, "3"},
 					GuessNumberInputs: []string{"50"},
+					PlayAgainInput:    []string{"2"},
 				}
 				gotWriter, game := initGame(mockInputSource)
 				game.Play(randomNumber)
@@ -208,7 +308,7 @@ func TestIntegrationPlay(t *testing.T) {
 
 				assert.Contains(t, gotOutput, tc.wantErrorMessage)
 				assert.Contains(t, gotOutput, gameConfig["difficulty"])
-				assert.Contains(t, gotOutput, "Hard")
+				assert.Contains(t, gotOutput, fmt.Sprintf(gameConfig["level"], "Hard"))
 				assert.Contains(t, gotOutput, gameConfig["guess"])
 				assert.Contains(t, gotOutput, fmt.Sprintf(gameConfig["equal"], 1))
 			})
@@ -222,17 +322,17 @@ func TestIntegrationPlay(t *testing.T) {
 			wantErrorMessage string
 		}{
 			{
-				description:      "incorrect",
+				description:      "non-numeric input",
 				invalidInput:     "incorrect",
 				wantErrorMessage: number.ParseNumberMessage,
 			},
 			{
-				description:      "less than 1",
+				description:      "less than min range",
 				invalidInput:     "0",
 				wantErrorMessage: fmt.Sprintf(number.NumberRangeMessage, 1, 100),
 			},
 			{
-				description:      "greater than 100",
+				description:      "greater than max range",
 				invalidInput:     "101",
 				wantErrorMessage: fmt.Sprintf(number.NumberRangeMessage, 1, 100),
 			},
@@ -243,16 +343,61 @@ func TestIntegrationPlay(t *testing.T) {
 				mockInputSource := &MockInputSource{
 					DifficultyInput:   []string{"3"},
 					GuessNumberInputs: []string{tc.invalidInput, "50"},
+					PlayAgainInput:    []string{"2"},
 				}
 				gotWriter, game := initGame(mockInputSource)
 				game.Play(randomNumber)
 
 				gotOutput := gotWriter.String()
 
-				assert.Contains(t, gotOutput, "Hard")
+				assert.Contains(t, gotOutput, fmt.Sprintf(gameConfig["level"], "Hard"))
 				assert.Contains(t, gotOutput, tc.wantErrorMessage)
 				assert.Contains(t, gotOutput, gameConfig["guess"])
 				assert.Contains(t, gotOutput, fmt.Sprintf(gameConfig["equal"], 1))
+			})
+		}
+	})
+
+	t.Run("invalid play again inputs", func(t *testing.T) {
+		testCases := []struct {
+			description      string
+			invalidInput     string
+			wantErrorMessage string
+		}{
+			{
+				description:      "non-numeric input",
+				invalidInput:     "invalid",
+				wantErrorMessage: number.ParseNumberMessage,
+			},
+			{
+				description:      "less than valid range",
+				invalidInput:     "0",
+				wantErrorMessage: fmt.Sprintf(number.NumberRangeMessage, 1, 2),
+			},
+			{
+				description:      "greater than valid range",
+				invalidInput:     "3",
+				wantErrorMessage: fmt.Sprintf(number.NumberRangeMessage, 1, 2),
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.description, func(t *testing.T) {
+				mockInputSource := &MockInputSource{
+					DifficultyInput:   []string{"3"},
+					GuessNumberInputs: []string{"50"},
+					PlayAgainInput:    []string{tc.invalidInput, "2"},
+				}
+				gotWriter, game := initGame(mockInputSource)
+				game.Play(randomNumber)
+
+				gotOutput := gotWriter.String()
+
+				assert.Contains(t, gotOutput, fmt.Sprintf(gameConfig["level"], "Hard"))
+				assert.Contains(t, gotOutput, fmt.Sprintf(gameConfig["equal"], 1))
+				assert.Contains(t, gotOutput, tc.wantErrorMessage)
+				assert.Contains(t, gotOutput, gameConfig["again"])
+				assert.Contains(t, gotOutput, gameConfig["bye"])
 			})
 		}
 	})
@@ -273,6 +418,8 @@ type MockInputSource struct {
 	difficultyIndex   int
 	GuessNumberInputs []string
 	guessNumberIndex  int
+	PlayAgainInput    []string
+	playAgainIndex    int
 }
 
 func (m *MockInputSource) NextDifficultyInput() (string, error) {
@@ -281,6 +428,7 @@ func (m *MockInputSource) NextDifficultyInput() (string, error) {
 		m.difficultyIndex++
 		return value, nil
 	}
+
 	return "", fmt.Errorf("no more difficulty inputs")
 }
 
@@ -292,4 +440,14 @@ func (m *MockInputSource) NextGuessNumberInput() (string, error) {
 	}
 
 	return "", fmt.Errorf("no more guess number inputs")
+}
+
+func (m *MockInputSource) NextPlayAgainInput() (string, error) {
+	if m.playAgainIndex < len(m.PlayAgainInput) {
+		value := m.PlayAgainInput[m.playAgainIndex]
+		m.playAgainIndex++
+		return value, nil
+	}
+
+	return "", fmt.Errorf("no more play again inputs")
 }

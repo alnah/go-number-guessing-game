@@ -90,6 +90,74 @@ func TestUnitParseGuessNumberInput(t *testing.T) {
 	})
 }
 
+func TestUnitParsePlayAgainInput(t *testing.T) {
+	t.Run("return parsed play again as bool",
+		func(t *testing.T) {
+			testCases := []struct {
+				description string
+				stringValue string
+				boolean     bool
+			}{
+				{
+					description: "on min",
+					stringValue: "1",
+					boolean:     true,
+				},
+				{
+					description: "on max",
+					stringValue: "2",
+					boolean:     false,
+				},
+			}
+			for _, tc := range testCases {
+				t.Run(tc.description, func(t *testing.T) {
+
+					got, err := n.ParsePlayAgainInput(tc.stringValue)
+
+					assert.NoError(t, err)
+					assert.Equal(t, tc.boolean, got)
+					assert.IsType(t, bool(tc.boolean), got)
+				})
+			}
+		})
+
+	t.Run("return error when string value not an integer", func(t *testing.T) {
+
+		want := n.NewParseNumberError()
+		_, got := n.ParsePlayAgainInput("not int")
+
+		assert.NotNil(t, got)
+		assert.ErrorAs(t, got, &want)
+	})
+
+	t.Run("return error when number is out of range", func(t *testing.T) {
+		testCases := []struct {
+			description string
+			value       string
+		}{
+			{
+				description: "less than 1",
+				value:       "0",
+			},
+			{
+				description: "greater than 2",
+				value:       "3",
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.description, func(t *testing.T) {
+
+				want := n.NewNumberRangeError(1, 100)
+				_, got := n.ParsePlayAgainInput(tc.value)
+
+				assert.NotNil(t, got)
+				assert.ErrorAs(t, got, &want)
+			})
+		}
+	})
+}
+
 func TestUnitParseDifficultyInput(t *testing.T) {
 	t.Run("return parsed difficulty level and max attempt", func(t *testing.T) {
 		testCases := []struct {
