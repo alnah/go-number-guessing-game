@@ -68,7 +68,7 @@ func TestIntegrationPlay(t *testing.T) {
 					fmt.Sprintf(gameConfig["greater"], 49),
 					gameConfig["spacer"],
 					gameConfig["guess"],
-					fmt.Sprintf(gameConfig["equal"], 3),
+					fmt.Sprintf(gameConfig["equal"], "0s", 3),
 					gameConfig["newline"],
 					gameConfig["again"],
 					gameConfig["bye"],
@@ -101,7 +101,7 @@ func TestIntegrationPlay(t *testing.T) {
 					fmt.Sprintf(gameConfig["greater"], 49),
 					gameConfig["spacer"],
 					gameConfig["guess"],
-					fmt.Sprintf(gameConfig["equal"], 5),
+					fmt.Sprintf(gameConfig["equal"], "0s", 5),
 					gameConfig["newline"],
 					gameConfig["again"],
 					gameConfig["bye"],
@@ -152,7 +152,7 @@ func TestIntegrationPlay(t *testing.T) {
 					fmt.Sprintf(gameConfig["greater"], 49),
 					gameConfig["spacer"],
 					gameConfig["guess"],
-					fmt.Sprintf(gameConfig["equal"], 10),
+					fmt.Sprintf(gameConfig["equal"], "0s", 10),
 					gameConfig["newline"],
 					gameConfig["again"],
 					gameConfig["bye"],
@@ -219,7 +219,7 @@ func TestIntegrationPlay(t *testing.T) {
 					fmt.Sprintf(gameConfig["greater"], 49),
 					gameConfig["spacer"],
 					gameConfig["guess"],
-					fmt.Sprintf(gameConfig["equal"], 3),
+					fmt.Sprintf(gameConfig["equal"], "0s", 3),
 					gameConfig["newline"],
 					gameConfig["again"],
 				} {
@@ -238,7 +238,7 @@ func TestIntegrationPlay(t *testing.T) {
 						fmt.Sprintf(gameConfig["greater"], 49),
 						gameConfig["spacer"],
 						gameConfig["guess"],
-						fmt.Sprintf(gameConfig["equal"], 3),
+						fmt.Sprintf(gameConfig["equal"], "0s", 3),
 						gameConfig["newline"],
 						gameConfig["again"],
 					} {
@@ -310,7 +310,7 @@ func TestIntegrationPlay(t *testing.T) {
 				assert.Contains(t, gotOutput, gameConfig["difficulty"])
 				assert.Contains(t, gotOutput, fmt.Sprintf(gameConfig["level"], "Hard"))
 				assert.Contains(t, gotOutput, gameConfig["guess"])
-				assert.Contains(t, gotOutput, fmt.Sprintf(gameConfig["equal"], 1))
+				assert.Contains(t, gotOutput, fmt.Sprintf(gameConfig["equal"], "0s", 1))
 			})
 		}
 	})
@@ -353,7 +353,7 @@ func TestIntegrationPlay(t *testing.T) {
 				assert.Contains(t, gotOutput, fmt.Sprintf(gameConfig["level"], "Hard"))
 				assert.Contains(t, gotOutput, tc.wantErrorMessage)
 				assert.Contains(t, gotOutput, gameConfig["guess"])
-				assert.Contains(t, gotOutput, fmt.Sprintf(gameConfig["equal"], 1))
+				assert.Contains(t, gotOutput, fmt.Sprintf(gameConfig["equal"], "0s", 1))
 			})
 		}
 	})
@@ -394,7 +394,7 @@ func TestIntegrationPlay(t *testing.T) {
 				gotOutput := gotWriter.String()
 
 				assert.Contains(t, gotOutput, fmt.Sprintf(gameConfig["level"], "Hard"))
-				assert.Contains(t, gotOutput, fmt.Sprintf(gameConfig["equal"], 1))
+				assert.Contains(t, gotOutput, fmt.Sprintf(gameConfig["equal"], "0s", 1))
 				assert.Contains(t, gotOutput, tc.wantErrorMessage)
 				assert.Contains(t, gotOutput, gameConfig["again"])
 				assert.Contains(t, gotOutput, gameConfig["bye"])
