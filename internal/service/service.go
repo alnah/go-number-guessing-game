@@ -88,6 +88,8 @@ turnLoop:
 		case 1:
 			cli.Display(g.Writer, []string{
 				fmt.Sprintf(g.GameConfig["greater"], guessNumber),
+				g.GameConfig["newline"],
+				g.giveHint(lastTurn),
 				g.GameConfig["spacer"],
 			})
 			continue turnLoop
@@ -95,6 +97,8 @@ turnLoop:
 		case -1:
 			cli.Display(g.Writer, []string{
 				fmt.Sprintf(g.GameConfig["less"], guessNumber),
+				g.GameConfig["newline"],
+				g.giveHint(lastTurn),
 				g.GameConfig["spacer"],
 			})
 			continue turnLoop
@@ -111,6 +115,29 @@ turnLoop:
 			break turnLoop
 		}
 	}
+}
+
+func (g *Game) giveHint(lastTurn game.Turn) string {
+	var hint string
+
+	switch {
+	case *lastTurn.Difference == 1:
+		hint = g.GameConfig["very_close_1"]
+	case *lastTurn.Difference == 2:
+		hint = g.GameConfig["very_close_2"]
+	case *lastTurn.Difference == 3:
+		hint = g.GameConfig["very_close_3"]
+	case *lastTurn.Difference == 4:
+		hint = g.GameConfig["close_1"]
+	case *lastTurn.Difference == 5:
+		hint = g.GameConfig["close_2"]
+	case *lastTurn.Difference > 5 && *lastTurn.Difference < 10:
+		hint = g.GameConfig["far"]
+	default:
+		hint = g.GameConfig["very_far"]
+	}
+
+	return hint
 }
 
 // getUserDifficultyInput prompts the user for difficulty input and returns

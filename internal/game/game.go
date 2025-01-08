@@ -1,6 +1,9 @@
 package game
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 // TurnsLengthError represents an error that occurs when the number of turns
 // exceeds the maximum allowed attempts.
@@ -79,6 +82,7 @@ func NewEmptyTurnsError() error {
 type Turn struct {
 	GuessNumber int
 	Outcome     *int
+	Difference  *int
 }
 
 // Turns is a slice of Turn, representing all the turns taken in the game.
@@ -105,7 +109,9 @@ func (gs *GameState) PlayTurn(turn Turn) error {
 	}
 
 	gs.newOutcome(&turn)
+	gs.newDifference(&turn)
 	gs.compareNumbers(turn)
+	gs.getDifference(turn)
 	gs.appendTurn(turn)
 
 	if err := gs.validateMaxLengthTurn(); err != nil {
@@ -182,6 +188,10 @@ func (*GameState) newOutcome(turn *Turn) {
 	turn.Outcome = new(int)
 }
 
+func (gs *GameState) newDifference(turn *Turn) {
+	turn.Difference = new(int)
+}
+
 // appendTurn adds a new turn to the game's list of turns.
 func (gs *GameState) appendTurn(turn Turn) {
 	gs.Turns = append(gs.Turns, turn)
@@ -198,4 +208,9 @@ func (gs *GameState) compareNumbers(turn Turn) {
 	default:
 		*turn.Outcome = 0
 	}
+}
+
+func (gs *GameState) getDifference(turn Turn) {
+	difference := int(math.Abs(float64(gs.RandomNumber - turn.GuessNumber)))
+	*turn.Difference = difference
 }
