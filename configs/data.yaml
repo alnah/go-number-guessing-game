@@ -12,7 +12,19 @@ less: "Incorrect! The number is less than %d."
 
 equal: "Congratulations! You guessed the correct number in %v with %d attempts."
 
-max_attempts: "Sorry, you have used all your attempts. Better luck next time!"
+very_close_1: "You're extremely close! Just one more guess and you'll have it!"
+
+very_close_2: "You're quite close! A little adjustment and you'll find the number!"
+
+very_close_3: "You're getting warmer! Keep those guesses coming, you're on the right path!"
+
+close_1: "You're getting closer! A bit more focus will lead you to the answer!"
+
+close_2: "You're not too far off! A slight change in your guesses could make a difference!"
+
+far: "You're a little far from the target!"
+
+very_far: "You're very far from the correct number. But don't give up!"
 
 again: "Do you want to play again?\n1. Yes\n2. No\n\nEnter your choice: "
 
