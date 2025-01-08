@@ -28,7 +28,7 @@ func (g *GameTimer) End() time.Duration {
 	now := g.Now()
 	g.EndTime = &now
 
-	return g.EndTime.Sub(*g.StartTime)
+	return g.EndTime.Sub(*g.StartTime).Truncate(time.Second)
 }
 
 func (g *GameTimer) Now() time.Time {

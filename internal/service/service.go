@@ -3,10 +3,12 @@ package service
 import (
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/go-number-guessing-game/internal/cli"
 	"github.com/go-number-guessing-game/internal/game"
 	"github.com/go-number-guessing-game/internal/number"
+	"github.com/go-number-guessing-game/internal/timer"
 )
 
 // Newline is a constant string representing a newline character.
@@ -62,6 +64,10 @@ func (g *Game) initGameState(level string, maxAttempts, randomNumber int) game.G
 // playTurns manages the game loop, processing user guesses and displaying
 // feedback until the game ends.
 func (g *Game) playTurns(gameState game.GameState) {
+	var gameTime time.Duration
+	gameTimer := timer.NewGameTimer()
+	gameTimer.Start()
+
 turnLoop:
 	for {
 		if gameState.NoMoreAttempts() {
@@ -69,11 +75,13 @@ turnLoop:
 				g.GameConfig["max_attempts"],
 				g.GameConfig["newline"],
 			})
+			gameTimer.End()
 			break turnLoop
 		}
 
 		guessNumber := g.getUserGuessNumberInput()
 		gameState.PlayTurn(game.Turn{GuessNumber: guessNumber})
+
 		lastTurn, _ := gameState.GetLastTurn()
 
 		switch *lastTurn.Outcome {
@@ -92,8 +100,12 @@ turnLoop:
 			continue turnLoop
 
 		case 0:
+			gameTime = gameTimer.End()
+			time := gameTime.String()
+			attempts := gameState.GetAttempts()
+
 			cli.Display(g.Writer, []string{
-				fmt.Sprintf(g.GameConfig["equal"], gameState.GetAttempts()),
+				fmt.Sprintf(g.GameConfig["equal"], time, attempts),
 				g.GameConfig["newline"],
 			})
 			break turnLoop
