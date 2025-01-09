@@ -31,7 +31,7 @@ type LevelError struct{}
 // Error returns a message indicating that the level must be one of the
 // predefined values: "Easy", "Medium", or "Hard".
 func (e *LevelError) Error() string {
-	return fmt.Sprint(`Level must be "Easy", "Medium" or "Hard".`)
+	return `Level must be "Easy", "Medium" or "Hard".`
 }
 
 // NewLevelError creates a new instance of LevelError.
@@ -45,7 +45,7 @@ type MaxAttemptsError struct{}
 
 // Error returns a message indicating the valid maximum attempts for each level.
 func (e *MaxAttemptsError) Error() string {
-	return fmt.Sprintf("Max attempts must be 10 (Easy), 5 (Medium) or 3 (Hard).")
+	return "Max attempts must be 10 (Easy), 5 (Medium) or 3 (Hard)."
 }
 
 // NewMaxAttemptsError creates a new instance of MaxAttemptsError.
@@ -59,7 +59,7 @@ type RandomNumberFoundError struct{}
 
 // Error returns a message indicating that the random number has already been found.
 func (e *RandomNumberFoundError) Error() string {
-	return fmt.Sprintf("Random number already found.")
+	return "Random number already found."
 }
 
 // NewRandomNumberFoundError creates a new instance of RandomNumberFoundError.
@@ -70,7 +70,7 @@ func NewRandomNumberFoundError() error {
 type EmptyTurnsError struct{}
 
 func (e *EmptyTurnsError) Error() string {
-	return fmt.Sprint("Turns must be an non-empty slice.")
+	return "Turns must be an non-empty slice."
 }
 
 func NewEmptyTurnsError() error {

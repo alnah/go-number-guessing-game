@@ -80,7 +80,13 @@ turnLoop:
 		}
 
 		guessNumber := g.getUserGuessNumberInput()
-		gameState.PlayTurn(game.Turn{GuessNumber: guessNumber})
+		err := gameState.PlayTurn(game.Turn{GuessNumber: guessNumber})
+		if err != nil {
+			cli.Display(g.Writer, []string{
+				err.Error(),
+				g.GameConfig["newline"],
+			})
+		}
 
 		lastTurn, _ := gameState.GetLastTurn()
 

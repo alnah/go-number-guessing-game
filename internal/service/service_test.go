@@ -12,12 +12,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const newline string = "\n"
-
 var gameConfig = config.LoadConfig("yaml", "../../configs/data.yaml")
 
 func TestIntegrationGameConfig(t *testing.T) {
-	var wantSet = map[string]struct{}{
+	wantSet := map[string]struct{}{
 		"greeting":     {},
 		"difficulty":   {},
 		"level":        {},
@@ -38,7 +36,7 @@ func TestIntegrationGameConfig(t *testing.T) {
 		"spacer":       {},
 	}
 
-	var gotSet = make(map[string]struct{})
+	gotSet := make(map[string]struct{})
 	for k := range gameConfig {
 		gotSet[k] = struct{}{}
 	}
