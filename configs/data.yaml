@@ -12,6 +12,8 @@ less: "Incorrect! The number is less than %d."
 
 equal: "Congratulations! You guessed the correct number in %v with %d attempts."
 
+max_attempts: "You've used all your chances! Better luck next time."
+
 very_close_1: "You're extremely close! Just one more guess and you'll have it!"
 
 very_close_2: "You're quite close! A little adjustment and you'll find the number!"
