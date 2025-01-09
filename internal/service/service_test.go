@@ -23,6 +23,7 @@ func TestIntegrationGameConfig(t *testing.T) {
 		"greater":      {},
 		"less":         {},
 		"equal":        {},
+		"max_attempts": {},
 		"very_close_1": {},
 		"very_close_2": {},
 		"very_close_3": {},
