@@ -30,6 +30,7 @@ func TestUnitDisplayMessage(t *testing.T) {
 		for _, tc := range testCases {
 			t.Run(tc.description, func(t *testing.T) {
 				buffer := &bytes.Buffer{}
+
 				c.Display(buffer, tc.input)
 
 				got := buffer.String()
@@ -38,31 +39,31 @@ func TestUnitDisplayMessage(t *testing.T) {
 		}
 	})
 
-	t.Run("empty message return error when", func(t *testing.T) {
+	t.Run("empty message display value can't be empty", func(t *testing.T) {
 		testCases := []struct {
 			description string
 			input       any
-			want        error
+			want        string
 		}{
 			{
 				description: "empty string",
 				input:       "",
-				want:        c.NewEmptyError(c.EmptyMessage["value"]),
+				want:        c.EmptyMessage["value"],
 			},
 			{
 				description: "empty slice of string",
 				input:       []string{},
-				want:        c.NewEmptyError(c.EmptyMessage["value"]),
+				want:        c.EmptyMessage["value"],
 			},
 			{
 				description: "slice with one empty string",
 				input:       []string{""},
-				want:        c.NewEmptyError(c.EmptyMessage["value"]),
+				want:        c.EmptyMessage["value"],
 			},
 			{
 				description: "any type not being string or slice of string",
 				input:       0,
-				want:        c.NewValueTypeError(0),
+				want:        c.EmptyMessage["value"],
 			},
 		}
 
@@ -70,10 +71,10 @@ func TestUnitDisplayMessage(t *testing.T) {
 			t.Run(tc.description, func(t *testing.T) {
 				buffer := &bytes.Buffer{}
 
-				got := c.Display(buffer, tc.input)
+				c.Display(buffer, tc.input)
 
-				assert.NotNil(t, got)
-				assert.ErrorAs(t, got, &tc.want)
+				got := buffer.String()
+				assert.Equal(t, tc.want, got)
 			})
 		}
 	})
@@ -82,45 +83,45 @@ func TestUnitDisplayMessage(t *testing.T) {
 func TestUnitCliInput(t *testing.T) {
 	t.Run("input tests", func(t *testing.T) {
 		testCases := []struct {
-			description      string
-			input            string
-			want             error
-			isDifficulty     bool
-			isGuessNumber    bool
-			isPlayAgain      bool
+			description   string
+			input         string
+			want          error
+			isDifficulty  bool
+			isGuessNumber bool
+			isPlayAgain   bool
 		}{
 			{
 				description:  "valid next difficulty input",
-				input:       "1",
-				want:        nil,
+				input:        "1",
+				want:         nil,
 				isDifficulty: true,
 			},
 			{
 				description:  "empty next difficulty input",
-				input:       "",
-				want:        c.NewEmptyError(c.EmptyMessage["empty_input"]),
+				input:        "",
+				want:         c.NewEmptyError(c.EmptyMessage["empty_input"]),
 				isDifficulty: true,
 			},
 			{
-				description:  "valid next guess number input",
-				input:       "1",
-				want:        nil,
+				description:   "valid next guess number input",
+				input:         "1",
+				want:          nil,
 				isGuessNumber: true,
 			},
 			{
-				description:  "empty next guess number input",
-				input:       "",
-				want:        c.NewEmptyError(c.EmptyMessage["empty_input"]),
+				description:   "empty next guess number input",
+				input:         "",
+				want:          c.NewEmptyError(c.EmptyMessage["empty_input"]),
 				isGuessNumber: true,
 			},
 			{
-				description:  "valid play again input",
+				description: "valid play again input",
 				input:       "1",
 				want:        nil,
 				isPlayAgain: true,
 			},
 			{
-				description:  "empty play again input",
+				description: "empty play again input",
 				input:       "",
 				want:        c.NewEmptyError(c.EmptyMessage["input"]),
 				isPlayAgain: true,
