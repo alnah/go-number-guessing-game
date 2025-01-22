@@ -49,26 +49,25 @@ type Store interface {
 	Add(score Score) (Scores, error)
 }
 
-type ScoreStore struct {
+type ScoresStore struct {
 	FilePath string
 }
 
-func (s *ScoreStore) Load() Scores {
+func (s *ScoresStore) Load() Scores {
 	byt, err := os.ReadFile(s.FilePath)
 	if err != nil {
 		return Scores{}
 	}
 
 	var scores Scores
-	err = json.Unmarshal(byt, &scores)
-	if err != nil {
+	if err = json.Unmarshal(byt, &scores); err != nil {
 		return Scores{}
 	}
 
 	return scores
 }
 
-func (s *ScoreStore) Add(score Score) (Scores, error) {
+func (s *ScoresStore) Add(score Score) (Scores, error) {
 	file, err := os.OpenFile(s.FilePath, os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return Scores{}, nil

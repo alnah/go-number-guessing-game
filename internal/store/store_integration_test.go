@@ -8,14 +8,14 @@ import (
 	"testing"
 	"time"
 
-	s "github.com/go-number-guessing-game/internal/store"
+	"github.com/go-number-guessing-game/internal/store"
 	"github.com/olekukonko/tablewriter"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestIntegrationScoresString(t *testing.T) {
 	t.Run("return scores table", func(t *testing.T) {
-		scores := s.Scores{}
+		scores := store.Scores{}
 		buffer := bytes.Buffer{}
 
 		table := tablewriter.NewWriter(&buffer)
@@ -34,69 +34,72 @@ func TestIntegrationScoresString(t *testing.T) {
 
 		want := buffer.String()
 		got := scores.String()
+
 		assert.Equal(t, want, got)
 	})
 
 	t.Run("return message to user when no scores", func(t *testing.T) {
-		scores := s.Scores{}
+		scores := store.Scores{}
 
-		want := s.NoScores
+		want := store.NoScores
 		got := scores.String()
+
 		assert.Equal(t, want, got)
 	})
 }
 
-func TestIntegrationScoreStoreLoad(t *testing.T) {
+func TestIntegrationScoresStoreLoad(t *testing.T) {
 	t.Run("return loaded scores", func(t *testing.T) {
 		file := createTempFile(t)
-		store := s.ScoreStore{FilePath: file.Name()}
+		scoresStore := store.ScoresStore{FilePath: file.Name()}
 		score := createRandomScore(t)
 
-		want, err := store.Add(score)
+		want, err := scoresStore.Add(score)
 		assert.NoError(t, err)
 
-		got := store.Load()
+		got := scoresStore.Load()
 		assert.Equal(t, want, got)
 	})
 
 	t.Run("return empty scores when not existing file", func(t *testing.T) {
-		store := s.ScoreStore{FilePath: "not_exist.json"}
+		scoresStore := store.ScoresStore{FilePath: "not_exist.json"}
 
-		want := s.Scores{}
-		got := store.Load()
+		want := store.Scores{}
+		got := scoresStore.Load()
+
 		assert.Equal(t, want, got)
 	})
 }
 
-func TestIntegrationScoreStoreAdd(t *testing.T) {
+func TestIntegrationScoresStoreAdd(t *testing.T) {
 	t.Run("add score and return sorted scores list", func(t *testing.T) {
 		file := createTempFile(t)
-		store := s.ScoreStore{FilePath: file.Name()}
-		score1 := s.Score{
+		scoresStore := store.ScoresStore{FilePath: file.Name()}
+		score1 := store.Score{
 			Player:   "Test1",
 			Level:    "Hard",
 			Attempts: 3,
 			Time:     30 * time.Second,
 		}
-		score2 := s.Score{
+		score2 := store.Score{
 			Player:   "Test2",
 			Level:    "Hard",
 			Attempts: 3,
 			Time:     20 * time.Second,
 		}
-		score3 := s.Score{
+		score3 := store.Score{
 			Player:   "Test3",
 			Level:    "Hard",
 			Attempts: 2,
 			Time:     30 * time.Second,
 		}
-		score4 := s.Score{
+		score4 := store.Score{
 			Player:   "Test4",
 			Level:    "Medium",
 			Attempts: 3,
 			Time:     30 * time.Second,
 		}
-		score5 := s.Score{
+		score5 := store.Score{
 			Player:   "Test5",
 			Level:    "Easy",
 			Attempts: 3,
@@ -104,68 +107,72 @@ func TestIntegrationScoreStoreAdd(t *testing.T) {
 		}
 
 		// Want sorted scores by level, attempts, and time
-		want := s.Scores{score3, score2, score1, score4, score5}
-		var got s.Scores
+		want := store.Scores{score3, score2, score1, score4, score5}
+		var got store.Scores
 		var err error
 		for _, s := range want {
-			got, err = store.Add(s)
+			got, err = scoresStore.Add(s)
 			assert.NoError(t, err)
 		}
+
 		assert.Equal(t, want, got)
 	})
 
 	t.Run("can't add twice the same score", func(t *testing.T) {
 		file := createTempFile(t)
-		store := s.ScoreStore{FilePath: file.Name()}
+		scoresStore := store.ScoresStore{FilePath: file.Name()}
 		score := createRandomScore(t)
 
-		want := s.Scores{score}
-		var got s.Scores
+		want := store.Scores{score}
+		var got store.Scores
 		var err error
 		for i := 1; i <= 2; i++ {
-			got, err = store.Add(score)
+			got, err = scoresStore.Add(score)
 			assert.NoError(t, err)
 		}
+
 		assert.Equal(t, want, got)
 	})
 
 	t.Run("add twice same score for different players", func(t *testing.T) {
 		file := createTempFile(t)
-		store := s.ScoreStore{FilePath: file.Name()}
-		score1 := s.Score{
+		scoresStore := store.ScoresStore{FilePath: file.Name()}
+		score1 := store.Score{
 			Player:   "Test1",
 			Level:    "Hard",
 			Attempts: 3,
 			Time:     30 * time.Second,
 		}
-		score2 := s.Score{
+		score2 := store.Score{
 			Player:   "Test2",
 			Level:    "Hard",
 			Attempts: 3,
 			Time:     30 * time.Second,
 		}
 
-		want := s.Scores{score1, score2}
-		var got s.Scores
+		want := store.Scores{score1, score2}
+		var got store.Scores
 		var err error
 		for _, s := range want {
-			got, err = store.Add(s)
+			got, err = scoresStore.Add(s)
 			assert.NoError(t, err)
 		}
+
 		assert.Equal(t, want, got)
 	})
 
 	t.Run("keep only the 10 best scores", func(t *testing.T) {
 		file := createTempFile(t)
-		store := s.ScoreStore{FilePath: file.Name()}
+		scoresStore := store.ScoresStore{FilePath: file.Name()}
 
-		var got s.Scores
+		var got store.Scores
 		var err error
 		for i := 1; i <= 11; i++ {
 			score := createRandomScore(t)
-			got, err = store.Add(score)
+			got, err = scoresStore.Add(score)
 			assert.NoError(t, err)
 		}
+
 		assert.Len(t, got, 10)
 	})
 }
@@ -184,7 +191,7 @@ func createTempFile(t *testing.T) *os.File {
 	return file
 }
 
-func createRandomScore(t *testing.T) s.Score {
+func createRandomScore(t *testing.T) store.Score {
 	t.Helper()
 
 	player := getRandomPlayer(4)
@@ -192,21 +199,29 @@ func createRandomScore(t *testing.T) s.Score {
 	attempts := getRandomAttempts(level)
 	time := getRandomTime(attempts)
 
-	return s.Score{Player: player, Level: level, Attempts: attempts, Time: time}
+	return store.Score{
+		Player:   player,
+		Level:    level,
+		Attempts: attempts,
+		Time:     time,
+	}
 }
 
 func getRandomPlayer(n int) string {
 	letters := []rune("abcdefghijklmnopqrstuvwxyz")
 	b := make([]rune, n)
+
 	for i := range b {
 		b[i] = letters[rand.Intn(len(letters))]
 	}
+
 	return string(b)
 }
 
 func getRandomLevel() string {
 	levels := []string{"Hard", "Medium", "Easy"}
 	index := rand.Intn(3)
+
 	return levels[index]
 }
 

@@ -8,7 +8,7 @@ import (
 )
 
 type InputSource interface {
-	NextPlayer() (string, error)
+	NextPlayerInput() (string, error)
 	NextDifficultyInput() (string, error)
 	NextGuessNumberInput() (string, error)
 	NextPlayAgainInput() (string, error)
@@ -18,7 +18,7 @@ type CliInput struct {
 	Source io.Reader
 }
 
-func (c *CliInput) NextPlayer() (string, error) {
+func (c *CliInput) NextPlayerInput() (string, error) {
 	return GetUserInput(c.Source)
 }
 
@@ -70,21 +70,18 @@ type Strings []string
 func Display(writer io.Writer, value any) {
 	switch t := value.(type) {
 	case string:
-		err := validateEmptyString(t)
-		if err != nil {
+		if err := validateEmptyString(t); err != nil {
 			fmt.Fprint(writer, EmptyMessage["value"])
 		}
 		fmt.Fprint(writer, t)
 
 	case []string:
-		err := validateEmptySlice(t)
-		if err != nil {
+		if err := validateEmptySlice(t); err != nil {
 			fmt.Fprint(writer, EmptyMessage["value"])
 		}
 
 		for _, s := range t {
-			err := validateEmptyString(s)
-			if err != nil {
+			if err := validateEmptyString(s); err != nil {
 				fmt.Fprint(writer, EmptyMessage["value"])
 			}
 			fmt.Fprint(writer, s)
@@ -109,6 +106,7 @@ func validateEmptySlice(slice []string) error {
 	if len(slice) == 0 {
 		return NewEmptyError(EmptyMessage["value"])
 	}
+
 	return nil
 }
 
@@ -116,5 +114,6 @@ func validateEmptyString(str any) error {
 	if str == "" {
 		return NewEmptyError(EmptyMessage["value"])
 	}
+
 	return nil
 }

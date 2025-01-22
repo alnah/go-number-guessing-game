@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	c "github.com/go-number-guessing-game/internal/cli"
+	"github.com/go-number-guessing-game/internal/cli"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,9 +30,7 @@ func TestUnitDisplayMessage(t *testing.T) {
 		for _, tc := range testCases {
 			t.Run(tc.description, func(t *testing.T) {
 				buffer := &bytes.Buffer{}
-
-				c.Display(buffer, tc.input)
-
+				cli.Display(buffer, tc.input)
 				got := buffer.String()
 				assert.Equal(t, tc.want, got)
 			})
@@ -48,22 +46,22 @@ func TestUnitDisplayMessage(t *testing.T) {
 			{
 				description: "empty string",
 				input:       "",
-				want:        c.EmptyMessage["value"],
+				want:        cli.EmptyMessage["value"],
 			},
 			{
 				description: "empty slice of string",
 				input:       []string{},
-				want:        c.EmptyMessage["value"],
+				want:        cli.EmptyMessage["value"],
 			},
 			{
 				description: "slice with one empty string",
 				input:       []string{""},
-				want:        c.EmptyMessage["value"],
+				want:        cli.EmptyMessage["value"],
 			},
 			{
 				description: "any type not being string or slice of string",
 				input:       0,
-				want:        c.EmptyMessage["value"],
+				want:        cli.EmptyMessage["value"],
 			},
 		}
 
@@ -71,9 +69,9 @@ func TestUnitDisplayMessage(t *testing.T) {
 			t.Run(tc.description, func(t *testing.T) {
 				buffer := &bytes.Buffer{}
 
-				c.Display(buffer, tc.input)
-
+				cli.Display(buffer, tc.input)
 				got := buffer.String()
+
 				assert.Equal(t, tc.want, got)
 			})
 		}
@@ -100,7 +98,7 @@ func TestUnitCliInput(t *testing.T) {
 			{
 				description: "empty next player input",
 				input:       "",
-				want:        c.NewEmptyError(c.EmptyMessage["empty_input"]),
+				want:        cli.NewEmptyError(cli.EmptyMessage["empty_input"]),
 				isPlayer:    true,
 			},
 			{
@@ -112,7 +110,7 @@ func TestUnitCliInput(t *testing.T) {
 			{
 				description:  "empty next difficulty input",
 				input:        "",
-				want:         c.NewEmptyError(c.EmptyMessage["empty_input"]),
+				want:         cli.NewEmptyError(cli.EmptyMessage["empty_input"]),
 				isDifficulty: true,
 			},
 			{
@@ -124,7 +122,7 @@ func TestUnitCliInput(t *testing.T) {
 			{
 				description:   "empty next guess number input",
 				input:         "",
-				want:          c.NewEmptyError(c.EmptyMessage["empty_input"]),
+				want:          cli.NewEmptyError(cli.EmptyMessage["empty_input"]),
 				isGuessNumber: true,
 			},
 			{
@@ -136,7 +134,7 @@ func TestUnitCliInput(t *testing.T) {
 			{
 				description: "empty play again input",
 				input:       "",
-				want:        c.NewEmptyError(c.EmptyMessage["input"]),
+				want:        cli.NewEmptyError(cli.EmptyMessage["input"]),
 				isPlayAgain: true,
 			},
 		}
@@ -144,13 +142,13 @@ func TestUnitCliInput(t *testing.T) {
 		for _, tc := range testCases {
 			t.Run(tc.description, func(t *testing.T) {
 				buffer := bytes.NewBufferString(tc.input)
-				cli := c.CliInput{Source: buffer}
+				cli := cli.CliInput{Source: buffer}
+
 				var got error
 				var input string
-
 				switch {
 				case tc.isPlayer:
-					input, got = cli.NextPlayer()
+					input, got = cli.NextPlayerInput()
 				case tc.isPlayAgain:
 					input, got = cli.NextPlayAgainInput()
 				case tc.isGuessNumber:

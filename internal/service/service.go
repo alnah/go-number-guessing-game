@@ -8,20 +8,17 @@ import (
 	"github.com/go-number-guessing-game/internal/cli"
 	"github.com/go-number-guessing-game/internal/game"
 	"github.com/go-number-guessing-game/internal/parser"
-	s "github.com/go-number-guessing-game/internal/store"
+	"github.com/go-number-guessing-game/internal/store"
 	"github.com/go-number-guessing-game/internal/timer"
 )
 
-// Game represents the state and configuration of the number guessing game.
 type Game struct {
 	Writer      io.Writer
 	InputSource cli.InputSource
 	GameConfig  map[string]string
 }
 
-// Play starts the game by displaying the greeting and difficulty options,
-// then initializing the game state and entering the game loop.
-func (g *Game) Play(randomNumber int, store s.Store) {
+func (g *Game) PlayGame(randomNumber int, store store.Store) {
 	cli.Display(g.Writer, []string{
 		g.GameConfig["greeting"],
 		g.GameConfig["spacer"],
@@ -39,18 +36,7 @@ gameLoop:
 		found, attempts, time := g.playTurns(gameState)
 
 		if found {
-			score := s.Score{
-				Player:   player,
-				Level:    level,
-				Attempts: attempts,
-				Time:     time,
-			}
-			scores, _ := store.Add(score)
-			cli.Display(g.Writer, []string{
-				g.GameConfig["spacer"],
-				scores.String(),
-				g.GameConfig["spacer"],
-			})
+			g.displayScores(player, level, attempts, time, store)
 		}
 
 		playAgain := g.getPlayAgainInput()
@@ -58,8 +44,10 @@ gameLoop:
 		case playAgain && found:
 			randomNumber = game.NewRandomNumber()
 			continue gameLoop
+
 		case playAgain && !found:
 			continue gameLoop
+
 		default:
 			cli.Display(g.Writer, []string{
 				g.GameConfig["bye"],
@@ -70,8 +58,6 @@ gameLoop:
 	}
 }
 
-// initGameState initializes the game state with the selected difficulty level,
-// maximum attempts, and the random number to be guessed.
 func (g *Game) initGameState(
 	level string,
 	maxAttempts,
@@ -85,12 +71,11 @@ func (g *Game) initGameState(
 	}
 }
 
-// playTurns manages the game loop, processing user guesses and displaying
-// feedback until the game ends.
 func (g *Game) playTurns(gameState game.GameState) (bool, int, time.Duration) {
 	var found bool
 	var attempts int
 	var gameTime time.Duration
+
 	gameTimer := timer.NewGameTimer()
 	gameTimer.Start()
 
@@ -152,35 +137,12 @@ turnLoop:
 	return found, attempts, gameTime
 }
 
-func (g *Game) giveHint(lastTurn game.Turn) string {
-	var hint string
-
-	switch {
-	case *lastTurn.Difference == 1:
-		hint = g.GameConfig["very_close_1"]
-	case *lastTurn.Difference == 2:
-		hint = g.GameConfig["very_close_2"]
-	case *lastTurn.Difference == 3:
-		hint = g.GameConfig["very_close_3"]
-	case *lastTurn.Difference == 4:
-		hint = g.GameConfig["close_1"]
-	case *lastTurn.Difference == 5:
-		hint = g.GameConfig["close_2"]
-	case *lastTurn.Difference > 5 && *lastTurn.Difference < 10:
-		hint = g.GameConfig["far"]
-	default:
-		hint = g.GameConfig["very_far"]
-	}
-
-	return hint
-}
-
 func (g *Game) getPlayerInput() string {
 	var player string
 
 playerLoop:
 	for {
-		input, err := g.InputSource.NextPlayer()
+		input, err := g.InputSource.NextPlayerInput()
 		if err != nil {
 			cli.Display(g.Writer, []string{
 				err.Error(),
@@ -204,8 +166,6 @@ playerLoop:
 	return player
 }
 
-// getUserDifficultyInput prompts the user for difficulty input and returns
-// the selected level and maximum attempts.
 func (g *Game) getUserDifficultyInput() (string, int) {
 	var level string
 	var maxAttempts int
@@ -241,8 +201,6 @@ difficultyLoop:
 	return level, maxAttempts
 }
 
-// getUserGuessNumberInput prompts the user for a guess number and returns
-// the parsed integer value.
 func (g *Game) getUserGuessNumberInput() int {
 	var guessNumber int
 
@@ -272,8 +230,6 @@ guessNumberLoop:
 	return guessNumber
 }
 
-// getPlayAgainInput prompt the user for a play gain number and returns
-// the parsed boolean.
 func (g *Game) getPlayAgainInput() bool {
 	var playAgain bool
 
@@ -302,4 +258,47 @@ playAgainLoop:
 	}
 
 	return playAgain
+}
+
+func (g *Game) giveHint(lastTurn game.Turn) string {
+	var hint string
+
+	switch {
+	case *lastTurn.Difference == 1:
+		hint = g.GameConfig["very_close_1"]
+	case *lastTurn.Difference == 2:
+		hint = g.GameConfig["very_close_2"]
+	case *lastTurn.Difference == 3:
+		hint = g.GameConfig["very_close_3"]
+	case *lastTurn.Difference == 4:
+		hint = g.GameConfig["close_1"]
+	case *lastTurn.Difference == 5:
+		hint = g.GameConfig["close_2"]
+	case *lastTurn.Difference > 5 && *lastTurn.Difference < 10:
+		hint = g.GameConfig["far"]
+	default:
+		hint = g.GameConfig["very_far"]
+	}
+
+	return hint
+}
+
+func (g *Game) displayScores(player string,
+	level string,
+	attempts int,
+	time time.Duration,
+	gameStore store.Store,
+) {
+	score := store.Score{
+		Player:   player,
+		Level:    level,
+		Attempts: attempts,
+		Time:     time,
+	}
+	scores, _ := gameStore.Add(score)
+	cli.Display(g.Writer, []string{
+		g.GameConfig["spacer"],
+		scores.String(),
+		g.GameConfig["spacer"],
+	})
 }

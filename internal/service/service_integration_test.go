@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-number-guessing-game/internal/config"
 	"github.com/go-number-guessing-game/internal/parser"
-	s "github.com/go-number-guessing-game/internal/service"
+	"github.com/go-number-guessing-game/internal/service"
 	"github.com/go-number-guessing-game/internal/store"
 	"github.com/stretchr/testify/assert"
 )
@@ -52,7 +52,7 @@ func TestIntegrationGameConfig(t *testing.T) {
 	assert.Equal(t, wantSet, gotSet)
 }
 
-func TestIntegrationPlay(t *testing.T) {
+func TestIntegrationGamePlay(t *testing.T) {
 	t.Run("user success", func(t *testing.T) {
 		testCases := []struct {
 			description     string
@@ -219,14 +219,15 @@ func TestIntegrationPlay(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.description, func(t *testing.T) {
-				gotWriter, game := initGame(tc.mockInputSource)
 				var wantWriter strings.Builder
+				gotWriter, game := initGame(tc.mockInputSource)
+
 				for _, s := range tc.outputStrings {
 					wantWriter.WriteString(s)
 				}
-				game.Play(fakeRandomNumber, stubScoreStore)
 
-				assert.Contains(t, wantWriter.String(), gotWriter.String())
+				game.PlayGame(fakeRandomNumber, stubScoreStore)
+				assert.Equal(t, wantWriter.String(), gotWriter.String())
 			})
 		}
 	})
@@ -262,7 +263,6 @@ func TestIntegrationPlay(t *testing.T) {
 				}
 
 				var wantWriter strings.Builder
-
 				for _, s := range []string{
 					gameConfig["greeting"],
 					gameConfig["spacer"],
@@ -324,7 +324,7 @@ func TestIntegrationPlay(t *testing.T) {
 				wantWriter.WriteString(gameConfig["newline"])
 
 				gotWriter, game := initGame(mockInputSource)
-				game.Play(fakeRandomNumber, stubScoreStore)
+				game.PlayGame(fakeRandomNumber, stubScoreStore)
 
 				assert.Equal(t, wantWriter.String(), gotWriter.String())
 			})
@@ -338,8 +338,9 @@ func TestIntegrationPlay(t *testing.T) {
 			GuessNumberInputs: []string{"53", "52", "51"},
 			PlayAgainInput:    []string{"2"},
 		}
+
 		gotWriter, game := initGame(mockInputSource)
-		game.Play(fakeRandomNumber, stubScoreStore)
+		game.PlayGame(fakeRandomNumber, stubScoreStore)
 
 		assert.Contains(t, gotWriter.String(), gameConfig["max_attempts"])
 		assert.Contains(t, gotWriter.String(), gameConfig["bye"])
@@ -377,16 +378,16 @@ func TestIntegrationPlay(t *testing.T) {
 					GuessNumberInputs: []string{"50"},
 					PlayAgainInput:    []string{"2"},
 				}
+
 				gotWriter, game := initGame(mockInputSource)
-				game.Play(fakeRandomNumber, stubScoreStore)
+				game.PlayGame(fakeRandomNumber, stubScoreStore)
+				got := gotWriter.String()
 
-				gotOutput := gotWriter.String()
-
-				assert.Contains(t, gotOutput, tc.wantErrorMessage)
-				assert.Contains(t, gotOutput, gameConfig["difficulty"])
-				assert.Contains(t, gotOutput, fmt.Sprintf(gameConfig["level"], "Hard"))
-				assert.Contains(t, gotOutput, gameConfig["guess"])
-				assert.Contains(t, gotOutput, fmt.Sprintf(gameConfig["equal"], "0s", 1))
+				assert.Contains(t, got, tc.wantErrorMessage)
+				assert.Contains(t, got, gameConfig["difficulty"])
+				assert.Contains(t, got, fmt.Sprintf(gameConfig["level"], "Hard"))
+				assert.Contains(t, got, gameConfig["guess"])
+				assert.Contains(t, got, fmt.Sprintf(gameConfig["equal"], "0s", 1))
 			})
 		}
 	})
@@ -422,15 +423,15 @@ func TestIntegrationPlay(t *testing.T) {
 					GuessNumberInputs: []string{tc.invalidInput, "50"},
 					PlayAgainInput:    []string{"2"},
 				}
+
 				gotWriter, game := initGame(mockInputSource)
-				game.Play(fakeRandomNumber, stubScoreStore)
+				game.PlayGame(fakeRandomNumber, stubScoreStore)
+				got := gotWriter.String()
 
-				gotOutput := gotWriter.String()
-
-				assert.Contains(t, gotOutput, fmt.Sprintf(gameConfig["level"], "Hard"))
-				assert.Contains(t, gotOutput, tc.wantErrorMessage)
-				assert.Contains(t, gotOutput, gameConfig["guess"])
-				assert.Contains(t, gotOutput, fmt.Sprintf(gameConfig["equal"], "0s", 1))
+				assert.Contains(t, got, fmt.Sprintf(gameConfig["level"], "Hard"))
+				assert.Contains(t, got, tc.wantErrorMessage)
+				assert.Contains(t, got, gameConfig["guess"])
+				assert.Contains(t, got, fmt.Sprintf(gameConfig["equal"], "0s", 1))
 			})
 		}
 	})
@@ -466,24 +467,24 @@ func TestIntegrationPlay(t *testing.T) {
 					GuessNumberInputs: []string{"50"},
 					PlayAgainInput:    []string{tc.invalidInput, "2"},
 				}
+
 				gotWriter, game := initGame(mockInputSource)
-				game.Play(fakeRandomNumber, stubScoreStore)
+				game.PlayGame(fakeRandomNumber, stubScoreStore)
+				got := gotWriter.String()
 
-				gotOutput := gotWriter.String()
-
-				assert.Contains(t, gotOutput, fmt.Sprintf(gameConfig["level"], "Hard"))
-				assert.Contains(t, gotOutput, fmt.Sprintf(gameConfig["equal"], "0s", 1))
-				assert.Contains(t, gotOutput, tc.wantErrorMessage)
-				assert.Contains(t, gotOutput, gameConfig["again"])
-				assert.Contains(t, gotOutput, gameConfig["bye"])
+				assert.Contains(t, got, fmt.Sprintf(gameConfig["level"], "Hard"))
+				assert.Contains(t, got, fmt.Sprintf(gameConfig["equal"], "0s", 1))
+				assert.Contains(t, got, tc.wantErrorMessage)
+				assert.Contains(t, got, gameConfig["again"])
+				assert.Contains(t, got, gameConfig["bye"])
 			})
 		}
 	})
 }
 
-func initGame(mockInputSource *MockInputSource) (*bytes.Buffer, s.Game) {
+func initGame(mockInputSource *MockInputSource) (*bytes.Buffer, service.Game) {
 	gotWriter := &bytes.Buffer{}
-	game := s.Game{
+	game := service.Game{
 		InputSource: mockInputSource,
 		GameConfig:  gameConfig,
 		Writer:      gotWriter,
@@ -535,42 +536,30 @@ type MockInputSource struct {
 	playAgainIndex int
 }
 
-func (m *MockInputSource) NextPlayer() (string, error) {
-	if m.playerIndex < len(m.PlayerInput) {
-		value := m.PlayerInput[m.playerIndex]
-		m.playerIndex++
+func (m *MockInputSource) getNextInput(
+	inputs []string,
+	index *int,
+) (string, error) {
+	if *index < len(inputs) {
+		value := inputs[*index]
+		(*index)++
 		return value, nil
 	}
+	return "", fmt.Errorf("no more inputs")
+}
 
-	return "", fmt.Errorf("no more player inputs")
+func (m *MockInputSource) NextPlayerInput() (string, error) {
+	return m.getNextInput(m.PlayerInput, &m.playerIndex)
 }
 
 func (m *MockInputSource) NextDifficultyInput() (string, error) {
-	if m.difficultyIndex < len(m.DifficultyInput) {
-		value := m.DifficultyInput[m.difficultyIndex]
-		m.difficultyIndex++
-		return value, nil
-	}
-
-	return "", fmt.Errorf("no more difficulty inputs")
+	return m.getNextInput(m.DifficultyInput, &m.difficultyIndex)
 }
 
 func (m *MockInputSource) NextGuessNumberInput() (string, error) {
-	if m.guessNumberIndex < len(m.GuessNumberInputs) {
-		value := m.GuessNumberInputs[m.guessNumberIndex]
-		m.guessNumberIndex++
-		return value, nil
-	}
-
-	return "", fmt.Errorf("no more guess number inputs")
+	return m.getNextInput(m.GuessNumberInputs, &m.guessNumberIndex)
 }
 
 func (m *MockInputSource) NextPlayAgainInput() (string, error) {
-	if m.playAgainIndex < len(m.PlayAgainInput) {
-		value := m.PlayAgainInput[m.playAgainIndex]
-		m.playAgainIndex++
-		return value, nil
-	}
-
-	return "", fmt.Errorf("no more play again inputs")
+	return m.getNextInput(m.PlayAgainInput, &m.playAgainIndex)
 }

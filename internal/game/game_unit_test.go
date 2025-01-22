@@ -3,13 +3,13 @@ package game_test
 import (
 	"testing"
 
-	g "github.com/go-number-guessing-game/internal/game"
+	"github.com/go-number-guessing-game/internal/game"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestUnitNewRandomNumber(t *testing.T) {
 	t.Run("return random number between 1 and 100", func(t *testing.T) {
-		got := g.NewRandomNumber()
+		got := game.NewRandomNumber()
 
 		assert.Greater(t, got, 0, "random number greater than 0")
 		assert.LessOrEqual(t, got, 100, "random number less or equal than 100")
@@ -23,19 +23,19 @@ func TestUnitPlayTurn(t *testing.T) {
 			description string
 			level       string
 			maxAttempts int
-			beforeTurns g.Turns
-			afterTurns  g.Turns
+			beforeTurns game.Turns
+			afterTurns  game.Turns
 		}{
 			{
 				description: "for hard level",
 				level:       "Hard",
 				maxAttempts: 3,
-				beforeTurns: g.Turns{
+				beforeTurns: game.Turns{
 					{GuessNumber: 25},
 					{GuessNumber: 75},
 					{GuessNumber: 50},
 				},
-				afterTurns: g.Turns{
+				afterTurns: game.Turns{
 					{
 						GuessNumber: 25,
 						Outcome:     toPointer(1),
@@ -57,14 +57,14 @@ func TestUnitPlayTurn(t *testing.T) {
 				description: "for medium level",
 				level:       "Medium",
 				maxAttempts: 5,
-				beforeTurns: g.Turns{
+				beforeTurns: game.Turns{
 					{GuessNumber: 30},
 					{GuessNumber: 70},
 					{GuessNumber: 40},
 					{GuessNumber: 60},
 					{GuessNumber: 50},
 				},
-				afterTurns: g.Turns{
+				afterTurns: game.Turns{
 					{
 						GuessNumber: 30,
 						Outcome:     toPointer(1),
@@ -96,7 +96,7 @@ func TestUnitPlayTurn(t *testing.T) {
 				description: "for easy level",
 				level:       "Easy",
 				maxAttempts: 10,
-				beforeTurns: g.Turns{
+				beforeTurns: game.Turns{
 					{GuessNumber: 25},
 					{GuessNumber: 70},
 					{GuessNumber: 30},
@@ -108,7 +108,7 @@ func TestUnitPlayTurn(t *testing.T) {
 					{GuessNumber: 45},
 					{GuessNumber: 50},
 				},
-				afterTurns: g.Turns{
+				afterTurns: game.Turns{
 					{
 						GuessNumber: 25,
 						Outcome:     toPointer(1),
@@ -165,11 +165,11 @@ func TestUnitPlayTurn(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.description, func(t *testing.T) {
-				gameState := g.GameState{
+				gameState := game.GameState{
 					Level:        tc.level,
 					MaxAttempts:  tc.maxAttempts,
 					RandomNumber: 50,
-					Turns:        g.Turns{},
+					Turns:        game.Turns{},
 				}
 
 				for _, turn := range tc.beforeTurns {
@@ -178,7 +178,7 @@ func TestUnitPlayTurn(t *testing.T) {
 				}
 
 				got := gameState
-				want := g.GameState{
+				want := game.GameState{
 					Level:        tc.level,
 					MaxAttempts:  tc.maxAttempts,
 					RandomNumber: 50,
@@ -194,13 +194,13 @@ func TestUnitPlayTurn(t *testing.T) {
 			description string
 			level       string
 			maxAttempts int
-			turns       g.Turns
+			turns       game.Turns
 		}{
 			{
 				description: "for hard level",
 				level:       "Hard",
 				maxAttempts: 3,
-				turns: g.Turns{
+				turns: game.Turns{
 					{GuessNumber: 25},
 					{GuessNumber: 75},
 					{GuessNumber: 51},
@@ -211,7 +211,7 @@ func TestUnitPlayTurn(t *testing.T) {
 				description: "for medium level",
 				level:       "Medium",
 				maxAttempts: 5,
-				turns: g.Turns{
+				turns: game.Turns{
 					{GuessNumber: 30},
 					{GuessNumber: 70},
 					{GuessNumber: 40},
@@ -224,7 +224,7 @@ func TestUnitPlayTurn(t *testing.T) {
 				description: "for easy level",
 				level:       "Easy",
 				maxAttempts: 10,
-				turns: g.Turns{
+				turns: game.Turns{
 					{GuessNumber: 25},
 					{GuessNumber: 70},
 					{GuessNumber: 30},
@@ -242,14 +242,14 @@ func TestUnitPlayTurn(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.description, func(t *testing.T) {
-				gameState := g.GameState{
+				gameState := game.GameState{
 					Level:        tc.level,
 					MaxAttempts:  tc.maxAttempts,
 					RandomNumber: 50,
-					Turns:        g.Turns{},
+					Turns:        game.Turns{},
 				}
 
-				want := g.NewTurnsLengthError(
+				want := game.NewTurnsLengthError(
 					gameState.Turns,
 					gameState.MaxAttempts,
 				)
@@ -269,16 +269,16 @@ func TestUnitPlayTurn(t *testing.T) {
 	})
 
 	t.Run("return error when incorrect level", func(t *testing.T) {
-		gameState := g.GameState{
+		gameState := game.GameState{
 			Level:        "incorrect",
 			MaxAttempts:  3,
 			RandomNumber: 50,
-			Turns:        g.Turns{},
+			Turns:        game.Turns{},
 		}
 
-		turn := g.Turn{GuessNumber: 1}
+		turn := game.Turn{GuessNumber: 1}
 
-		want := g.NewLevelError()
+		want := game.NewLevelError()
 		got := gameState.PlayTurn(turn)
 
 		assert.NotNil(t, want)
@@ -310,16 +310,15 @@ func TestUnitPlayTurn(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.description, func(t *testing.T) {
-				gameState := g.GameState{
+				turn := game.Turn{GuessNumber: 1}
+				gameState := game.GameState{
 					Level:        tc.level,
 					MaxAttempts:  tc.maxAttempts,
 					RandomNumber: 50,
-					Turns:        g.Turns{},
+					Turns:        game.Turns{},
 				}
 
-				turn := g.Turn{GuessNumber: 1}
-
-				want := g.NewMaxAttemptsError()
+				want := game.NewMaxAttemptsError()
 				got := gameState.PlayTurn(turn)
 
 				assert.NotNil(t, want)
@@ -329,28 +328,28 @@ func TestUnitPlayTurn(t *testing.T) {
 	})
 
 	t.Run("return error when random number already found", func(t *testing.T) {
-		gameState := g.GameState{
+		gameState := game.GameState{
 			Level:        "Hard",
 			MaxAttempts:  3,
 			RandomNumber: 50,
-			Turns:        g.Turns{},
+			Turns:        game.Turns{},
 		}
 
-		ok := gameState.PlayTurn(g.Turn{GuessNumber: 50})
-		assert.NoError(t, ok)
+		err := gameState.PlayTurn(game.Turn{GuessNumber: 50})
+		assert.NoError(t, err)
 
-		want := g.NewRandomNumberFoundError()
-		got := gameState.PlayTurn(g.Turn{GuessNumber: 51})
+		want := game.NewRandomNumberFoundError()
+		got := gameState.PlayTurn(game.Turn{GuessNumber: 51})
 		assert.ErrorAs(t, got, &want)
 	})
 }
 
 func TestUnitGetAttempts(t *testing.T) {
-	gameState := g.GameState{
+	gameState := game.GameState{
 		Level:        "Easy",
 		MaxAttempts:  10,
 		RandomNumber: 50,
-		Turns: g.Turns{{
+		Turns: game.Turns{{
 			GuessNumber: 50,
 			Outcome:     toPointer(0),
 			Difference:  toPointer(0),
@@ -363,11 +362,11 @@ func TestUnitGetAttempts(t *testing.T) {
 
 func TestUnitGetLastTurn(t *testing.T) {
 	t.Run("return last turn", func(t *testing.T) {
-		gameState := g.GameState{
+		gameState := game.GameState{
 			Level:        "Easy",
 			MaxAttempts:  10,
 			RandomNumber: 50,
-			Turns: g.Turns{{
+			Turns: game.Turns{{
 				GuessNumber: 50,
 				Outcome:     toPointer(0),
 				Difference:  toPointer(0),
@@ -377,7 +376,7 @@ func TestUnitGetLastTurn(t *testing.T) {
 		got, err := gameState.GetLastTurn()
 
 		assert.NoError(t, err)
-		assert.Equal(t, g.Turn{
+		assert.Equal(t, game.Turn{
 			GuessNumber: 50,
 			Outcome:     toPointer(0),
 			Difference:  toPointer(0),
@@ -385,14 +384,14 @@ func TestUnitGetLastTurn(t *testing.T) {
 	})
 
 	t.Run("error when no turns", func(t *testing.T) {
-		gameState := g.GameState{
+		gameState := game.GameState{
 			Level:        "Easy",
 			MaxAttempts:  10,
 			RandomNumber: 50,
-			Turns:        g.Turns{},
+			Turns:        game.Turns{},
 		}
 
-		want := g.NewEmptyTurnsError()
+		want := game.NewEmptyTurnsError()
 		_, got := gameState.GetLastTurn()
 
 		assert.NotNil(t, got)
@@ -404,12 +403,12 @@ func TestUnitNoMoreAttempts(t *testing.T) {
 	t.Run("return", func(t *testing.T) {
 		testCases := []struct {
 			description string
-			turns       g.Turns
+			turns       game.Turns
 			want        bool
 		}{
 			{
 				description: "true when no more attempts",
-				turns: g.Turns{
+				turns: game.Turns{
 					{
 						GuessNumber: 53,
 						Outcome:     toPointer(-1),
@@ -430,7 +429,7 @@ func TestUnitNoMoreAttempts(t *testing.T) {
 			},
 			{
 				description: "false when more attempts",
-				turns: g.Turns{
+				turns: game.Turns{
 					{
 						GuessNumber: 53,
 						Outcome:     toPointer(-1),
@@ -446,7 +445,7 @@ func TestUnitNoMoreAttempts(t *testing.T) {
 			},
 		}
 		for _, tc := range testCases {
-			gameState := g.GameState{
+			gameState := game.GameState{
 				Level:        "Hard",
 				MaxAttempts:  3,
 				RandomNumber: 50,
