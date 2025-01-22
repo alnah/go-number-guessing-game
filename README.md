@@ -7,6 +7,8 @@ This repository hosts a simple number guessing CLI game written in Go. While the
 - **Package structuring** (separating responsibilities under `internal/`)
 - **Project layout** (clear organization with `cmd`, `configs`, `Makefile`, etc.)
 
+The idea is taken from [roadmap.sh](https://roadmap.sh/projects/number-guessing-game).
+
 ---
 
 ## Getting Started

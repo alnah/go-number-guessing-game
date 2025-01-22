@@ -2,9 +2,6 @@
 # Build
 number-guessing
 
-# Scores
-internal/data/scores.json
-
 ### Go ###
 # Binaries for programs and plugins
 *.exe
