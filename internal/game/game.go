@@ -3,6 +3,7 @@ package game
 import (
 	"fmt"
 	"math"
+	"math/rand/v2"
 )
 
 // TurnsLengthError represents an error that occurs when the number of turns
@@ -75,6 +76,11 @@ func (e *EmptyTurnsError) Error() string {
 
 func NewEmptyTurnsError() error {
 	return &EmptyTurnsError{}
+}
+
+// NewRandomNumber generates and returns a random integer between 1 and 100.
+func NewRandomNumber() int {
+	return rand.IntN(100) + 1
 }
 
 // Turn represents a single turn in the game, containing the guessed number

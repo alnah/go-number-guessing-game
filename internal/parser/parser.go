@@ -1,10 +1,36 @@
-package number
+package parser
 
 import (
 	"fmt"
-	"math/rand/v2"
 	"strconv"
 )
+
+// ParsePlayerError represents an error that occurs when the player input
+// exceeds the allowed character limit.
+type ParsePlayerError struct{}
+
+// ParsePlayerMessage is the error message indicating that the player name
+// must be 20 characters or fewer.
+const ParsePlayerMessage = "It must be 20 characters at most."
+
+// Error returns the error message for ParsePlayerError.
+func (e *ParsePlayerError) Error() string {
+	return fmt.Sprint(ParsePlayerMessage)
+}
+
+// NewParsePlayerError creates a new instance of ParsePlayerError.
+func NewParsePlayerError() error {
+	return &ParsePlayerError{}
+}
+
+// ParsePlayerInput validates the player input string and ensures it does not
+// exceed the maximum allowed length of 20 characters.
+func ParsePlayerInput(s string) (string, error) {
+	if len(s) > 20 {
+		return "", NewParsePlayerError()
+	}
+	return s, nil
+}
 
 // ParseNumberError represents an error that occurs when parsing a number
 // fails due to an invalid format.
@@ -44,11 +70,6 @@ func (e *NumberRangeError) Error() string {
 // the specified minimum and maximum values.
 func NewNumberRangeError(min, max int) error {
 	return &NumberRangeError{Min: min, Max: max}
-}
-
-// NewRandomNumber generates and returns a random integer between 1 and 100.
-func NewRandomNumber() int {
-	return rand.IntN(100) + 1
 }
 
 // ParseGuessNumberInput parses the input string as a guess number and

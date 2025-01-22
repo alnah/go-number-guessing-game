@@ -8,6 +8,7 @@ import (
 )
 
 type InputSource interface {
+	NextPlayer() (string, error)
 	NextDifficultyInput() (string, error)
 	NextGuessNumberInput() (string, error)
 	NextPlayAgainInput() (string, error)
@@ -15,6 +16,10 @@ type InputSource interface {
 
 type CliInput struct {
 	Source io.Reader
+}
+
+func (c *CliInput) NextPlayer() (string, error) {
+	return GetUserInput(c.Source)
 }
 
 func (c *CliInput) NextDifficultyInput() (string, error) {

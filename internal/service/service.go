@@ -7,12 +7,10 @@ import (
 
 	"github.com/go-number-guessing-game/internal/cli"
 	"github.com/go-number-guessing-game/internal/game"
-	"github.com/go-number-guessing-game/internal/number"
+	"github.com/go-number-guessing-game/internal/parser"
+	s "github.com/go-number-guessing-game/internal/store"
 	"github.com/go-number-guessing-game/internal/timer"
 )
-
-// Newline is a constant string representing a newline character.
-const Newline string = "\n"
 
 // Game represents the state and configuration of the number guessing game.
 type Game struct {
@@ -23,7 +21,7 @@ type Game struct {
 
 // Play starts the game by displaying the greeting and difficulty options,
 // then initializing the game state and entering the game loop.
-func (g *Game) Play(randomNumber int) {
+func (g *Game) Play(randomNumber int, store s.Store) {
 	cli.Display(g.Writer, []string{
 		g.GameConfig["greeting"],
 		g.GameConfig["spacer"],
@@ -31,14 +29,32 @@ func (g *Game) Play(randomNumber int) {
 
 gameLoop:
 	for {
+		cli.Display(g.Writer, g.GameConfig["player"])
+		player := g.getPlayerInput()
+
 		cli.Display(g.Writer, g.GameConfig["difficulty"])
-
 		level, maxAttempts := g.getUserDifficultyInput()
-		gameState := g.initGameState(level, maxAttempts, randomNumber)
-		g.playTurns(gameState)
 
-		playGain := g.getPlayAgainInput()
-		if playGain {
+		gameState := g.initGameState(level, maxAttempts, randomNumber)
+		found, attempts, time := g.playTurns(gameState)
+
+		if found {
+			score := s.Score{
+				Player:   player,
+				Level:    level,
+				Attempts: attempts,
+				Time:     time,
+			}
+			scores, _ := store.Add(score)
+			cli.Display(g.Writer, []string{
+				g.GameConfig["spacer"],
+				scores.String(),
+				g.GameConfig["spacer"],
+			})
+		}
+
+		playAgain := g.getPlayAgainInput()
+		if playAgain {
 			continue gameLoop
 		} else {
 			cli.Display(g.Writer, []string{
@@ -52,7 +68,11 @@ gameLoop:
 
 // initGameState initializes the game state with the selected difficulty level,
 // maximum attempts, and the random number to be guessed.
-func (g *Game) initGameState(level string, maxAttempts, randomNumber int) game.GameState {
+func (g *Game) initGameState(
+	level string,
+	maxAttempts,
+	randomNumber int,
+) game.GameState {
 	return game.GameState{
 		Level:        level,
 		MaxAttempts:  maxAttempts,
@@ -63,7 +83,9 @@ func (g *Game) initGameState(level string, maxAttempts, randomNumber int) game.G
 
 // playTurns manages the game loop, processing user guesses and displaying
 // feedback until the game ends.
-func (g *Game) playTurns(gameState game.GameState) {
+func (g *Game) playTurns(gameState game.GameState) (bool, int, time.Duration) {
+	var found bool
+	var attempts int
 	var gameTime time.Duration
 	gameTimer := timer.NewGameTimer()
 	gameTimer.Start()
@@ -110,17 +132,20 @@ turnLoop:
 			continue turnLoop
 
 		case 0:
+			found = true
 			gameTime = gameTimer.End()
-			time := gameTime.String()
-			attempts := gameState.GetAttempts()
+			stringTime := gameTime.String()
+			attempts = gameState.GetAttempts()
 
 			cli.Display(g.Writer, []string{
-				fmt.Sprintf(g.GameConfig["equal"], time, attempts),
+				fmt.Sprintf(g.GameConfig["equal"], stringTime, attempts),
 				g.GameConfig["newline"],
 			})
 			break turnLoop
 		}
 	}
+
+	return found, attempts, gameTime
 }
 
 func (g *Game) giveHint(lastTurn game.Turn) string {
@@ -146,6 +171,35 @@ func (g *Game) giveHint(lastTurn game.Turn) string {
 	return hint
 }
 
+func (g *Game) getPlayerInput() string {
+	var player string
+
+playerLoop:
+	for {
+		input, err := g.InputSource.NextPlayer()
+		if err != nil {
+			cli.Display(g.Writer, []string{
+				err.Error(),
+				g.GameConfig["spacer"],
+				g.GameConfig["player"],
+			})
+			continue playerLoop
+		}
+
+		player, err = parser.ParsePlayerInput(input)
+		if err != nil {
+			cli.Display(g.Writer, []string{
+				err.Error(),
+				g.GameConfig["spacer"],
+				g.GameConfig["player"],
+			})
+			continue playerLoop
+		}
+		break playerLoop
+	}
+	return player
+}
+
 // getUserDifficultyInput prompts the user for difficulty input and returns
 // the selected level and maximum attempts.
 func (g *Game) getUserDifficultyInput() (string, int) {
@@ -164,7 +218,7 @@ difficultyLoop:
 			continue difficultyLoop
 		}
 
-		level, maxAttempts, err = number.ParseDifficultyInput(input)
+		level, maxAttempts, err = parser.ParseDifficultyInput(input)
 		if err != nil {
 			cli.Display(g.Writer, []string{
 				err.Error(),
@@ -200,7 +254,7 @@ guessNumberLoop:
 			continue guessNumberLoop
 		}
 
-		guessNumber, err = number.ParseGuessNumberInput(input)
+		guessNumber, err = parser.ParseGuessNumberInput(input)
 		if err != nil {
 			cli.Display(g.Writer, []string{
 				err.Error(),
@@ -232,7 +286,7 @@ playAgainLoop:
 			continue playAgainLoop
 		}
 
-		playAgain, err = number.ParsePlayAgainInput(input)
+		playAgain, err = parser.ParsePlayAgainInput(input)
 		if err != nil {
 			cli.Display(g.Writer, []string{
 				err.Error(),
