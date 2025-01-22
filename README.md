@@ -1,5 +1,7 @@
 # Go Number Guessing Game
 
+![demo](demo.gif)
+
 This repository hosts a simple number guessing CLI game written in Go. While the functionality is straightforward—guess a number between 1 and 100—its main purpose is to serve as a toy app for practicing:
 
 - **Testing** (unit and integration tests)
