@@ -1,3 +1,5 @@
+// Package service orchestrates the game logic and integrates other packages.
+// It provides the PlayGame method to manage gameplay and user interactions.
 package service
 
 import (
@@ -12,12 +14,17 @@ import (
 	"github.com/go-number-guessing-game/internal/timer"
 )
 
+// Game encapsulates the writer and input source interfaces for testing.
+// It also holds a configuration map for displaying messages in the CLI.
 type Game struct {
 	Writer      io.Writer
 	InputSource cli.InputSource
 	GameConfig  map[string]string
 }
 
+// PlayGame initiates the game with a random number and a store interface.
+// It manages user inputs, orchestrates game logic, and persists scores.
+// If the user guesses correctly, a new random number is generated.
 func (g *Game) PlayGame(randomNumber int, store store.Store) {
 	cli.Display(g.Writer, []string{
 		g.GameConfig["greeting"],
