@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	gameConfig       = config.LoadConfig("yaml", "../../configs/appconfig.yaml")
+	gameConfig       = config.LoadConfig("yaml", "../../configs/app.yaml")
 	stubScoreStore   = &StubScoreStore{isEmpty: false}
 	fakeRandomNumber = 50
 	fakeScores       = stubScoreStore.Load().String()
@@ -255,7 +255,7 @@ func TestIntegrationPlay(t *testing.T) {
 					PlayerInput:     []string{"test1", "test2"},
 					DifficultyInput: []string{"3", "3"},
 					GuessNumberInputs: []string{
-						"51", "49", "50",
+						"51", "49", "52",
 						"51", "49", "50",
 					},
 					PlayAgainInput: tc.playAgainInput,
@@ -281,11 +281,12 @@ func TestIntegrationPlay(t *testing.T) {
 					gameConfig["very_close_1"],
 					gameConfig["spacer"],
 					gameConfig["guess"],
-					fmt.Sprintf(gameConfig["equal"], "0s", 3),
+					fmt.Sprintf(gameConfig["less"], 52),
 					gameConfig["newline"],
+					gameConfig["very_close_2"],
 					gameConfig["spacer"],
-					fakeScores,
-					gameConfig["spacer"],
+					gameConfig["max_attempts"],
+					gameConfig["newline"],
 					gameConfig["again"],
 				} {
 					wantWriter.WriteString(s)

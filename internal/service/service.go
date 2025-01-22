@@ -54,9 +54,13 @@ gameLoop:
 		}
 
 		playAgain := g.getPlayAgainInput()
-		if playAgain {
+		switch {
+		case playAgain && found:
+			randomNumber = game.NewRandomNumber()
 			continue gameLoop
-		} else {
+		case playAgain && !found:
+			continue gameLoop
+		default:
 			cli.Display(g.Writer, []string{
 				g.GameConfig["bye"],
 				g.GameConfig["newline"],

@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	gameConfig := config.LoadConfig("yaml", "configs/appconfig.yaml")
+	gameConfig := config.LoadConfig("yaml", "configs/app.yaml")
 	store := &store.ScoreStore{FilePath: "internal/data/scores.json"}
 	cliInputSource := &cli.CliInput{Source: os.Stdin}
 	game := service.Game{
