@@ -86,10 +86,23 @@ func TestUnitCliInput(t *testing.T) {
 			description   string
 			input         string
 			want          error
+			isPlayer      bool
 			isDifficulty  bool
 			isGuessNumber bool
 			isPlayAgain   bool
 		}{
+			{
+				description: "valid next player input",
+				input:       "test",
+				want:        nil,
+				isPlayer:    true,
+			},
+			{
+				description: "empty next player input",
+				input:       "",
+				want:        c.NewEmptyError(c.EmptyMessage["empty_input"]),
+				isPlayer:    true,
+			},
 			{
 				description:  "valid next difficulty input",
 				input:        "1",
@@ -136,6 +149,8 @@ func TestUnitCliInput(t *testing.T) {
 				var input string
 
 				switch {
+				case tc.isPlayer:
+					input, got = cli.NextPlayer()
 				case tc.isPlayAgain:
 					input, got = cli.NextPlayAgainInput()
 				case tc.isGuessNumber:

@@ -1,5 +1,7 @@
 greeting: "Welcome to the Number Guessing Game!\nI'm thinking of a number between 1 and 100.\nYou have a limited number of chances to guess the correct number."
 
+player: "Enter your player name: "
+
 difficulty: "Please select the difficulty level:\n1. Easy (10 chances)\n2. Medium (5 chances)\n3. Hard (3 chances)\n\nEnter your choice: "
 
 level: "Great! You have selected the %s difficulty level.\nLet's start the game!"

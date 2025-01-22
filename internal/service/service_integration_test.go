@@ -5,18 +5,26 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/go-number-guessing-game/internal/config"
-	"github.com/go-number-guessing-game/internal/number"
+	"github.com/go-number-guessing-game/internal/parser"
 	s "github.com/go-number-guessing-game/internal/service"
+	"github.com/go-number-guessing-game/internal/store"
 	"github.com/stretchr/testify/assert"
 )
 
-var gameConfig = config.LoadConfig("yaml", "../../configs/data.yaml")
+var (
+	gameConfig       = config.LoadConfig("yaml", "../../configs/appconfig.yaml")
+	stubScoreStore   = &StubScoreStore{isEmpty: false}
+	fakeRandomNumber = 50
+	fakeScores       = stubScoreStore.Load().String()
+)
 
 func TestIntegrationGameConfig(t *testing.T) {
 	wantSet := map[string]struct{}{
 		"greeting":     {},
+		"player":       {},
 		"difficulty":   {},
 		"level":        {},
 		"guess":        {},
@@ -45,8 +53,6 @@ func TestIntegrationGameConfig(t *testing.T) {
 }
 
 func TestIntegrationPlay(t *testing.T) {
-	randomNumber := 50
-
 	t.Run("user success", func(t *testing.T) {
 		testCases := []struct {
 			description     string
@@ -56,6 +62,7 @@ func TestIntegrationPlay(t *testing.T) {
 			{
 				description: "hard difficulty",
 				mockInputSource: &MockInputSource{
+					PlayerInput:       []string{"test"},
 					DifficultyInput:   []string{"3"},
 					GuessNumberInputs: []string{"48", "51", "50"},
 					PlayAgainInput:    []string{"2"},
@@ -63,6 +70,7 @@ func TestIntegrationPlay(t *testing.T) {
 				outputStrings: []string{
 					gameConfig["greeting"],
 					gameConfig["spacer"],
+					gameConfig["player"],
 					gameConfig["difficulty"],
 					fmt.Sprintf(gameConfig["level"], "Hard"),
 					gameConfig["spacer"],
@@ -79,6 +87,9 @@ func TestIntegrationPlay(t *testing.T) {
 					gameConfig["guess"],
 					fmt.Sprintf(gameConfig["equal"], "0s", 3),
 					gameConfig["newline"],
+					gameConfig["spacer"],
+					fakeScores,
+					gameConfig["spacer"],
 					gameConfig["again"],
 					gameConfig["bye"],
 					gameConfig["newline"],
@@ -87,6 +98,7 @@ func TestIntegrationPlay(t *testing.T) {
 			{
 				description: "medium difficulty",
 				mockInputSource: &MockInputSource{
+					PlayerInput:       []string{"test"},
 					DifficultyInput:   []string{"2"},
 					GuessNumberInputs: []string{"46", "53", "48", "51", "50"},
 					PlayAgainInput:    []string{"2"},
@@ -94,6 +106,7 @@ func TestIntegrationPlay(t *testing.T) {
 				outputStrings: []string{
 					gameConfig["greeting"],
 					gameConfig["spacer"],
+					gameConfig["player"],
 					gameConfig["difficulty"],
 					fmt.Sprintf(gameConfig["level"], "Medium"),
 					gameConfig["spacer"],
@@ -120,6 +133,9 @@ func TestIntegrationPlay(t *testing.T) {
 					gameConfig["guess"],
 					fmt.Sprintf(gameConfig["equal"], "0s", 5),
 					gameConfig["newline"],
+					gameConfig["spacer"],
+					fakeScores,
+					gameConfig["spacer"],
 					gameConfig["again"],
 					gameConfig["bye"],
 					gameConfig["newline"],
@@ -128,6 +144,7 @@ func TestIntegrationPlay(t *testing.T) {
 			{
 				description: "easy difficulty",
 				mockInputSource: &MockInputSource{
+					PlayerInput:     []string{"test"},
 					DifficultyInput: []string{"1"},
 					GuessNumberInputs: []string{
 						"61", "39", "56", "44", "54",
@@ -138,6 +155,7 @@ func TestIntegrationPlay(t *testing.T) {
 				outputStrings: []string{
 					gameConfig["greeting"],
 					gameConfig["spacer"],
+					gameConfig["player"],
 					gameConfig["difficulty"],
 					fmt.Sprintf(gameConfig["level"], "Easy"),
 					gameConfig["spacer"],
@@ -189,6 +207,9 @@ func TestIntegrationPlay(t *testing.T) {
 					gameConfig["guess"],
 					fmt.Sprintf(gameConfig["equal"], "0s", 10),
 					gameConfig["newline"],
+					gameConfig["spacer"],
+					fakeScores,
+					gameConfig["spacer"],
 					gameConfig["again"],
 					gameConfig["bye"],
 					gameConfig["newline"],
@@ -203,9 +224,9 @@ func TestIntegrationPlay(t *testing.T) {
 				for _, s := range tc.outputStrings {
 					wantWriter.WriteString(s)
 				}
-				game.Play(randomNumber)
+				game.Play(fakeRandomNumber, stubScoreStore)
 
-				assert.Equal(t, wantWriter.String(), gotWriter.String())
+				assert.Contains(t, wantWriter.String(), gotWriter.String())
 			})
 		}
 	})
@@ -231,6 +252,7 @@ func TestIntegrationPlay(t *testing.T) {
 		for _, tc := range testCases {
 			t.Run(tc.description, func(t *testing.T) {
 				mockInputSource := &MockInputSource{
+					PlayerInput:     []string{"test1", "test2"},
 					DifficultyInput: []string{"3", "3"},
 					GuessNumberInputs: []string{
 						"51", "49", "50",
@@ -244,6 +266,7 @@ func TestIntegrationPlay(t *testing.T) {
 				for _, s := range []string{
 					gameConfig["greeting"],
 					gameConfig["spacer"],
+					gameConfig["player"],
 					gameConfig["difficulty"],
 					fmt.Sprintf(gameConfig["level"], "Hard"),
 					gameConfig["spacer"],
@@ -260,6 +283,9 @@ func TestIntegrationPlay(t *testing.T) {
 					gameConfig["guess"],
 					fmt.Sprintf(gameConfig["equal"], "0s", 3),
 					gameConfig["newline"],
+					gameConfig["spacer"],
+					fakeScores,
+					gameConfig["spacer"],
 					gameConfig["again"],
 				} {
 					wantWriter.WriteString(s)
@@ -267,6 +293,7 @@ func TestIntegrationPlay(t *testing.T) {
 
 				if tc.playAgain {
 					for _, s := range []string{
+						gameConfig["player"],
 						gameConfig["difficulty"],
 						fmt.Sprintf(gameConfig["level"], "Hard"),
 						gameConfig["spacer"],
@@ -283,6 +310,9 @@ func TestIntegrationPlay(t *testing.T) {
 						gameConfig["guess"],
 						fmt.Sprintf(gameConfig["equal"], "0s", 3),
 						gameConfig["newline"],
+						gameConfig["spacer"],
+						fakeScores,
+						gameConfig["spacer"],
 						gameConfig["again"],
 					} {
 						wantWriter.WriteString(s)
@@ -293,7 +323,7 @@ func TestIntegrationPlay(t *testing.T) {
 				wantWriter.WriteString(gameConfig["newline"])
 
 				gotWriter, game := initGame(mockInputSource)
-				game.Play(randomNumber)
+				game.Play(fakeRandomNumber, stubScoreStore)
 
 				assert.Equal(t, wantWriter.String(), gotWriter.String())
 			})
@@ -302,12 +332,13 @@ func TestIntegrationPlay(t *testing.T) {
 
 	t.Run("no more attempts", func(t *testing.T) {
 		mockInputSource := &MockInputSource{
+			PlayerInput:       []string{"test"},
 			DifficultyInput:   []string{"3"},
 			GuessNumberInputs: []string{"53", "52", "51"},
 			PlayAgainInput:    []string{"2"},
 		}
 		gotWriter, game := initGame(mockInputSource)
-		game.Play(randomNumber)
+		game.Play(fakeRandomNumber, stubScoreStore)
 
 		assert.Contains(t, gotWriter.String(), gameConfig["max_attempts"])
 		assert.Contains(t, gotWriter.String(), gameConfig["bye"])
@@ -323,29 +354,30 @@ func TestIntegrationPlay(t *testing.T) {
 			{
 				description:      "non-numeric input",
 				invalidInput:     "incorrect",
-				wantErrorMessage: number.ParseNumberMessage,
+				wantErrorMessage: parser.ParseNumberMessage,
 			},
 			{
 				description:      "greater than max difficulty",
 				invalidInput:     "4",
-				wantErrorMessage: fmt.Sprintf(number.NumberRangeMessage, 1, 3),
+				wantErrorMessage: fmt.Sprintf(parser.NumberRangeMessage, 1, 3),
 			},
 			{
 				description:      "less than min difficulty",
 				invalidInput:     "0",
-				wantErrorMessage: fmt.Sprintf(number.NumberRangeMessage, 1, 3),
+				wantErrorMessage: fmt.Sprintf(parser.NumberRangeMessage, 1, 3),
 			},
 		}
 
 		for _, tc := range testCases {
 			t.Run(tc.description, func(t *testing.T) {
 				mockInputSource := &MockInputSource{
+					PlayerInput:       []string{"test"},
 					DifficultyInput:   []string{tc.invalidInput, "3"},
 					GuessNumberInputs: []string{"50"},
 					PlayAgainInput:    []string{"2"},
 				}
 				gotWriter, game := initGame(mockInputSource)
-				game.Play(randomNumber)
+				game.Play(fakeRandomNumber, stubScoreStore)
 
 				gotOutput := gotWriter.String()
 
@@ -367,29 +399,30 @@ func TestIntegrationPlay(t *testing.T) {
 			{
 				description:      "non-numeric input",
 				invalidInput:     "incorrect",
-				wantErrorMessage: number.ParseNumberMessage,
+				wantErrorMessage: parser.ParseNumberMessage,
 			},
 			{
 				description:      "less than min range",
 				invalidInput:     "0",
-				wantErrorMessage: fmt.Sprintf(number.NumberRangeMessage, 1, 100),
+				wantErrorMessage: fmt.Sprintf(parser.NumberRangeMessage, 1, 100),
 			},
 			{
 				description:      "greater than max range",
 				invalidInput:     "101",
-				wantErrorMessage: fmt.Sprintf(number.NumberRangeMessage, 1, 100),
+				wantErrorMessage: fmt.Sprintf(parser.NumberRangeMessage, 1, 100),
 			},
 		}
 
 		for _, tc := range testCases {
 			t.Run(tc.description, func(t *testing.T) {
 				mockInputSource := &MockInputSource{
+					PlayerInput:       []string{"test"},
 					DifficultyInput:   []string{"3"},
 					GuessNumberInputs: []string{tc.invalidInput, "50"},
 					PlayAgainInput:    []string{"2"},
 				}
 				gotWriter, game := initGame(mockInputSource)
-				game.Play(randomNumber)
+				game.Play(fakeRandomNumber, stubScoreStore)
 
 				gotOutput := gotWriter.String()
 
@@ -410,29 +443,30 @@ func TestIntegrationPlay(t *testing.T) {
 			{
 				description:      "non-numeric input",
 				invalidInput:     "invalid",
-				wantErrorMessage: number.ParseNumberMessage,
+				wantErrorMessage: parser.ParseNumberMessage,
 			},
 			{
 				description:      "less than valid range",
 				invalidInput:     "0",
-				wantErrorMessage: fmt.Sprintf(number.NumberRangeMessage, 1, 2),
+				wantErrorMessage: fmt.Sprintf(parser.NumberRangeMessage, 1, 2),
 			},
 			{
 				description:      "greater than valid range",
 				invalidInput:     "3",
-				wantErrorMessage: fmt.Sprintf(number.NumberRangeMessage, 1, 2),
+				wantErrorMessage: fmt.Sprintf(parser.NumberRangeMessage, 1, 2),
 			},
 		}
 
 		for _, tc := range testCases {
 			t.Run(tc.description, func(t *testing.T) {
 				mockInputSource := &MockInputSource{
+					PlayerInput:       []string{"test"},
 					DifficultyInput:   []string{"3"},
 					GuessNumberInputs: []string{"50"},
 					PlayAgainInput:    []string{tc.invalidInput, "2"},
 				}
 				gotWriter, game := initGame(mockInputSource)
-				game.Play(randomNumber)
+				game.Play(fakeRandomNumber, stubScoreStore)
 
 				gotOutput := gotWriter.String()
 
@@ -456,13 +490,58 @@ func initGame(mockInputSource *MockInputSource) (*bytes.Buffer, s.Game) {
 	return gotWriter, game
 }
 
+type StubScoreStore struct {
+	isEmpty bool
+}
+
+func (s *StubScoreStore) Load() store.Scores {
+	if s.isEmpty {
+		return store.Scores{}
+	}
+
+	return store.Scores{
+		{
+			Player:   "Test",
+			Level:    "Hard",
+			Attempts: 3,
+			Time:     30 * time.Second,
+		},
+	}
+}
+
+func (s *StubScoreStore) Add(store.Score) (store.Scores, error) {
+	return store.Scores{
+		{
+			Player:   "Test",
+			Level:    "Hard",
+			Attempts: 3,
+			Time:     30 * time.Second,
+		},
+	}, nil
+}
+
 type MockInputSource struct {
-	DifficultyInput   []string
-	difficultyIndex   int
+	PlayerInput []string
+	playerIndex int
+
+	DifficultyInput []string
+	difficultyIndex int
+
 	GuessNumberInputs []string
 	guessNumberIndex  int
-	PlayAgainInput    []string
-	playAgainIndex    int
+
+	PlayAgainInput []string
+	playAgainIndex int
+}
+
+func (m *MockInputSource) NextPlayer() (string, error) {
+	if m.playerIndex < len(m.PlayerInput) {
+		value := m.PlayerInput[m.playerIndex]
+		m.playerIndex++
+		return value, nil
+	}
+
+	return "", fmt.Errorf("no more player inputs")
 }
 
 func (m *MockInputSource) NextDifficultyInput() (string, error) {

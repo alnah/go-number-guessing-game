@@ -7,6 +7,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestUnitNewRandomNumber(t *testing.T) {
+	t.Run("return random number between 1 and 100", func(t *testing.T) {
+		got := g.NewRandomNumber()
+
+		assert.Greater(t, got, 0, "random number greater than 0")
+		assert.LessOrEqual(t, got, 100, "random number less or equal than 100")
+		assert.IsType(t, int(got), got)
+	})
+}
+
 func TestUnitPlayTurn(t *testing.T) {
 	t.Run("return complete game state", func(t *testing.T) {
 		testCases := []struct {

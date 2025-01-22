@@ -1,19 +1,32 @@
-package number_test
+package parser_test
 
 import (
 	"testing"
 
-	n "github.com/go-number-guessing-game/internal/number"
+	p "github.com/go-number-guessing-game/internal/parser"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestUnitNewRandomNumber(t *testing.T) {
-	t.Run("return random number between 1 and 100", func(t *testing.T) {
-		got := n.NewRandomNumber()
+func TestUnitParsePlayerInput(t *testing.T) {
+	t.Run("return parsed player", func(t *testing.T) {
+		value := "test"
 
-		assert.Greater(t, got, 0, "random number greater than 0")
-		assert.LessOrEqual(t, got, 100, "random number less or equal than 100")
-		assert.IsType(t, int(got), got)
+		got, err := p.ParsePlayerInput(value)
+		assert.NoError(t, err)
+
+		assert.Equal(t, value, got)
+	})
+
+	t.Run("return error when player is more than 30 chars", func(t *testing.T) {
+		var value string
+		for i := 1; i <= 31; i++ {
+			value += "a"
+		}
+
+		want := p.NewParsePlayerError()
+		_, got := p.ParsePlayerInput(value)
+		assert.NotNil(t, got)
+		assert.ErrorAs(t, got, &want)
 	})
 }
 
@@ -43,8 +56,7 @@ func TestUnitParseGuessNumberInput(t *testing.T) {
 			}
 			for _, tc := range testCases {
 				t.Run(tc.description, func(t *testing.T) {
-
-					got, err := n.ParseGuessNumberInput(tc.stringValue)
+					got, err := p.ParseGuessNumberInput(tc.stringValue)
 
 					assert.NoError(t, err)
 					assert.Equal(t, tc.integerValue, got)
@@ -54,9 +66,8 @@ func TestUnitParseGuessNumberInput(t *testing.T) {
 		})
 
 	t.Run("return error when string value not an integer", func(t *testing.T) {
-
-		want := n.NewParseNumberError()
-		_, got := n.ParseGuessNumberInput("not int")
+		want := p.NewParseNumberError()
+		_, got := p.ParseGuessNumberInput("not int")
 
 		assert.NotNil(t, got)
 		assert.ErrorAs(t, got, &want)
@@ -79,9 +90,8 @@ func TestUnitParseGuessNumberInput(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.description, func(t *testing.T) {
-
-				want := n.NewNumberRangeError(1, 100)
-				_, got := n.ParseGuessNumberInput(tc.value)
+				want := p.NewNumberRangeError(1, 100)
+				_, got := p.ParseGuessNumberInput(tc.value)
 
 				assert.NotNil(t, got)
 				assert.ErrorAs(t, got, &want)
@@ -111,8 +121,7 @@ func TestUnitParsePlayAgainInput(t *testing.T) {
 			}
 			for _, tc := range testCases {
 				t.Run(tc.description, func(t *testing.T) {
-
-					got, err := n.ParsePlayAgainInput(tc.stringValue)
+					got, err := p.ParsePlayAgainInput(tc.stringValue)
 
 					assert.NoError(t, err)
 					assert.Equal(t, tc.boolean, got)
@@ -122,9 +131,8 @@ func TestUnitParsePlayAgainInput(t *testing.T) {
 		})
 
 	t.Run("return error when string value not an integer", func(t *testing.T) {
-
-		want := n.NewParseNumberError()
-		_, got := n.ParsePlayAgainInput("not int")
+		want := p.NewParseNumberError()
+		_, got := p.ParsePlayAgainInput("not int")
 
 		assert.NotNil(t, got)
 		assert.ErrorAs(t, got, &want)
@@ -147,9 +155,8 @@ func TestUnitParsePlayAgainInput(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.description, func(t *testing.T) {
-
-				want := n.NewNumberRangeError(1, 100)
-				_, got := n.ParsePlayAgainInput(tc.value)
+				want := p.NewNumberRangeError(1, 100)
+				_, got := p.ParsePlayAgainInput(tc.value)
 
 				assert.NotNil(t, got)
 				assert.ErrorAs(t, got, &want)
@@ -188,7 +195,7 @@ func TestUnitParseDifficultyInput(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.description, func(t *testing.T) {
-				gotLevel, gotMaxAttempts, err := n.ParseDifficultyInput(tc.value)
+				gotLevel, gotMaxAttempts, err := p.ParseDifficultyInput(tc.value)
 
 				assert.NoError(t, err)
 				assert.Equal(t, tc.wantLevel, gotLevel)
@@ -198,8 +205,8 @@ func TestUnitParseDifficultyInput(t *testing.T) {
 	})
 
 	t.Run("return error when string value not an integer", func(t *testing.T) {
-		want := n.NewParseNumberError()
-		_, _, got := n.ParseDifficultyInput("not int")
+		want := p.NewParseNumberError()
+		_, _, got := p.ParseDifficultyInput("not int")
 
 		assert.NotNil(t, got)
 		assert.ErrorAs(t, got, &want)
@@ -221,8 +228,8 @@ func TestUnitParseDifficultyInput(t *testing.T) {
 		}
 
 		for _, tc := range testCases {
-			want := n.NewNumberRangeError(1, 3)
-			_, _, got := n.ParseDifficultyInput(tc.value)
+			want := p.NewNumberRangeError(1, 3)
+			_, _, got := p.ParseDifficultyInput(tc.value)
 
 			assert.NotNil(t, got)
 			assert.ErrorAs(t, got, &want)

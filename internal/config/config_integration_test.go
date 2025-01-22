@@ -8,14 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const (
-	goodDataTestYAML = "data_test.yaml"
-	badDataTestJSON  = "data_test.json"
-)
-
-func TestUnitLoadConfig(t *testing.T) {
+func TestIntegrationLoadConfig(t *testing.T) {
 	t.Run("return config map", func(t *testing.T) {
-		configMap := config.LoadConfig("yaml", goodDataTestYAML)
+		configMap := config.LoadConfig("yaml", "../../configs/mock.yaml")
 
 		assert.Len(t, configMap, 1)
 		assert.Equal(t, "test", configMap["key"])
@@ -23,7 +18,7 @@ func TestUnitLoadConfig(t *testing.T) {
 
 	t.Run("panic when error", func(t *testing.T) {
 		assert.Panics(t, func() {
-			config.LoadConfig("json", badDataTestJSON)
+			config.LoadConfig("yaml", "../../configs/bad.yaml")
 		}, "want panic when loading invalid JSON data structure")
 	})
 }
