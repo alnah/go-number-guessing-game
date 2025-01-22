@@ -12,23 +12,34 @@ func TestUnitParsePlayerInput(t *testing.T) {
 		value := "test"
 
 		got, err := parser.ParsePlayerInput(value)
-		
+
 		assert.NoError(t, err)
 		assert.Equal(t, value, got)
 	})
 
-	t.Run("return error when player is more than 30 chars", func(t *testing.T) {
-		var value string
-		for i := 1; i <= 31; i++ {
-			value += "a"
-		}
+	testCases := []struct {
+		description string
+		value       string
+	}{
+		{
+			description: "more than 20 chars",
+			value:       "aaaaaaaaaaaaaaaaaaaaa", // 21 'a's
+		},
+		{
+			description: "empty player name",
+			value:       "",
+		},
+	}
 
-		want := parser.NewParsePlayerError()
-		_, got := parser.ParsePlayerInput(value)
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			want := parser.NewParsePlayerError()
+			_, got := parser.ParsePlayerInput(tc.value)
 
-		assert.NotNil(t, got)
-		assert.ErrorAs(t, got, &want)
-	})
+			assert.NotNil(t, got)
+			assert.ErrorAs(t, got, &want)
+		})
+	}
 }
 
 func TestUnitParseGuessNumberInput(t *testing.T) {

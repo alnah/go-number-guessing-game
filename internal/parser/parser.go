@@ -13,7 +13,7 @@ type ParsePlayerError struct{}
 
 // ParsePlayerMessage is the message displayed when the player name exceeds
 // 20 characters. It is public for testing purposes.
-const ParsePlayerMessage = "It must be 20 characters at most."
+const ParsePlayerMessage = "It must be non-empty, and 20 characters at most."
 
 // Error returns the error message for ParsePlayerError.
 func (e *ParsePlayerError) Error() string {
@@ -28,7 +28,7 @@ func NewParsePlayerError() error {
 // ParsePlayerInput validates the player name, ensuring it is not empty and
 // does not exceed 20 characters. Returns a custom error if validation fails.
 func ParsePlayerInput(s string) (string, error) {
-	if len(s) > 20 {
+	if len(s) > 20 || s == "" {
 		return "", NewParsePlayerError()
 	}
 	return s, nil
