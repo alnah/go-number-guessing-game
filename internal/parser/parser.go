@@ -117,8 +117,6 @@ func ParseDifficultyInput(s string) (string, int, error) {
 	return toDifficulty[integer], toMaxAttempts[integer], nil
 }
 
-// validateInputNumber converts a string to an integer and checks if it is
-// within the specified range. Returns a custom error if validation fails.
 func validateInputNumber(stringValue string, min, max int) (int, error) {
 	integer, err := strconv.Atoi(stringValue)
 	if err != nil {
